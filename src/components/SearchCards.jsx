@@ -17,14 +17,14 @@ export default function SearchCards() {
       setLoading(true);
       // Fetch AUCTION items
       const auctionRes = await fetch(
-        `http://localhost:5000/api/search?q=${encodedQuery}&filter=${encodeURIComponent("buyingOptions:{AUCTION}")}`
+        `https://tcgbackend.onrender.com/search?q=${encodedQuery}&filter=${encodeURIComponent("buyingOptions:{AUCTION}")}`
       );
       const auctionData = await auctionRes.json();
       console.log(auctionData)
 
       // Fetch FIXED_PRICE items
       const fixedRes = await fetch(
-        `http://localhost:5000/api/search?q=${encodedQuery}&filter=${encodeURIComponent("buyingOptions:{FIXED_PRICE}")}`
+        `https://tcgbackend.onrender.com/api/search?q=${encodedQuery}&filter=${encodeURIComponent("buyingOptions:{FIXED_PRICE}")}`
       );
       const fixedData = await fixedRes.json();
 
