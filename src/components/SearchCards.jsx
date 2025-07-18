@@ -17,7 +17,7 @@ export default function SearchCards() {
       setLoading(true);
       // Fetch AUCTION items
       const auctionRes = await fetch(
-        `https://tcgbackend.onrender.com/search?q=${encodedQuery}&filter=${encodeURIComponent("buyingOptions:{AUCTION}")}`
+        `https://tcgbackend.onrender.com/api/search?q=${encodedQuery}&filter=${encodeURIComponent("buyingOptions:{AUCTION}")}`
       );
       const auctionData = await auctionRes.json();
       console.log(auctionData)
