@@ -1,0 +1,335 @@
+:root {
+  font-family: "Montserrat", system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #1854c4;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: #ffffff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #00bfff;
+}
+
+.pokeBall {
+  width: 115px;
+  margin-left: -10px;
+}
+select:hover {
+  cursor: pointer;
+}
+body {
+  background: url('/bg.svg') no-repeat bottom;
+  background-repeat: no-repeat;
+  background-size: cover;             /* makes sure it always fills entire screen */
+  background-position: top center;
+  background-attachment: fixed; 
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  min-height: 100vh;
+  justify-content: center;
+
+}
+
+h1 {
+  font-family: "Luckiest Guy";
+  font-size: 3.2em;
+  line-height: 1.1;
+  text-shadow: 4px 4px 0 rgba(13, 0, 83, 0.822);
+}
+input {
+  border-radius: 8px 0 0 8px;
+
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #2a2e45;
+  color: #f9f9f9;
+  width: 50%;
+  transition: border-color 0.25s;
+}
+button {
+  border-radius: 0 8px 8px 0;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: ffcc00;
+  color: #1e1f3b;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+.cardUl li {
+
+  background-color: #2e344e;
+  color: #f9f9f9;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 300px;
+  padding: 2em;
+  border: 2px solid #00bfff;
+  box-shadow: 2px 2px 6px rgb(0, 0, 0);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.cardUl li:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+.cardUl li img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 2px solid #ffcc00;
+}
+.inputDiv {
+  display: flex;
+  width: 90%;
+  justify-content: center;
+  align-items: center;
+  margin: 0.5em auto;
+}
+
+.inputDiv button {
+  height: 42px;
+}
+
+.cardUl {
+  display: grid;
+  grid-template-columns: 1fr; /* 1 column for mobile */
+  gap: 1em;
+  width: 100%;
+  padding: 1em 0;
+  justify-items: center;
+}
+
+.vob {
+  margin-top: 1em;;
+  color: #00bfff;
+  text-decoration: underline;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+
+.hello {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+
+
+
+
+.subHead {
+  font-family: "Luckiest Guy", sans-serif;
+  font-size: 2em;
+  text-align: center;
+  margin: 1em 0;
+  color: #ffcc00;
+  text-shadow: 4px 4px 0 rgba(13, 0, 83, 0.822);
+}
+
+
+.logoDiv {
+  display: flex;
+  width: 90%;
+  align-items: center;
+  margin: 0.5em auto;
+  justify-content: center;
+}
+.linkDiv {
+  display: flex;
+  min-width: 50%;
+  justify-content: center;
+  margin: 0 auto 3em auto;
+  text-align: center;
+  align-items: center;
+  gap: 0.5em
+}
+
+.cardDiv {
+  border: 2px solid #00bfff;
+  padding: 1rem;
+  width: 200px;
+  background-color: #2e344e;
+  color: #f9f9f9;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 1px 4px 6px rgba(0, 0, 0, 0.726);
+}
+.addBtn {
+  background-color: #FFD93D;
+  color: #000;
+  border: none;
+  padding: 0.5em 1em;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  margin: 0.5em
+}
+.cardDiv img {
+  border: 1px solid #FFD93D;
+  box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.76)
+}
+
+.signupContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 80%;
+  padding: 2em;
+  background-color: #2e344e;
+  color: #f9f9f9;
+  border-radius: 8px;
+  margin: 0 auto;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.507);
+
+}
+
+.signupForm {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+
+}
+.signupForm input{
+  width: 80%;
+  border-radius: 8px;
+  margin: 0 auto;
+  background-color: #151629;
+}
+
+
+.signupForm button {
+  width: 80%;
+  margin: 1em auto;
+  background-color: #ffcc00;
+  color: #1e1f3b;
+  border: none;
+  padding: 0.5em 1em;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+.bookmark1, .bookmark2 {
+  height: 40px;
+  background-color: #e96464;
+  color: #222222;
+  border: none;
+  padding: 0.5em 1em;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+
+}
+.logOutBtn {
+  background-color: inherit;
+  margin: 0;
+  padding: 0;
+  color: #ffffff;
+}
+
+.logOutBtn:hover {
+  color: #00bfff;
+  text-decoration: underline;
+  border: none;
+
+}
+
+.bookmark1:active, .bookmark2:active {
+  background-color: #ffcc00;
+}
+.bookmark2 {
+  background-color: #1e1f3b;
+}
+.bookmark1:hover{
+  background-color: #ffa4a4;
+  color: #ffffff;
+}
+.bookmark2:hover {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+.myCards { 
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+  gap: 1rem; 
+  padding: 1rem;
+  align-items: center;
+  justify-items: center;
+}
+@media (min-width: 600px){
+  
+  .cardUl {
+    grid-template-columns: repeat(2, minmax(300px, 1fr));
+    align-items: stretch;
+    gap: 2em;
+  }
+  .myCards {
+    grid-template-columns: repeat(2, minmax(300px, 1fr));
+    align-items: stretch;
+
+  }
+
+}
+
+@media (min-width: 1000px){
+  
+  .cardUl {
+    grid-template-columns: repeat(2, minmax(300px, 1fr));
+    align-items: stretch;
+    gap: 2em;
+  }
+  .myCards {
+    grid-template-columns: repeat(3, minmax(300px, 1fr));
+    align-items: stretch;
+
+  }
+
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+}
