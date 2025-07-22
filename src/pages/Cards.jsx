@@ -29,7 +29,7 @@ const conditions = ['NM', 'LP', 'MP', 'HP', 'DMG', 'POOR', 'GRADED 10', 'GRADED 
 
     try {
       const res = await fetch(
-        `https://api.pokemontcg.io/v2/cards?q=name:"${encodeURIComponent(`${formattedQuery}*`)}"`
+        `https://api.pokemontcg.io/v2/cards?q=name:"${encodeURIComponent(`${formattedQuery}`)}"`
       );
       const data = await res.json();
       console.log(data.data)

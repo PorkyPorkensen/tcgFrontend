@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import cnf from "../assets/cnf.png"
 
 export default function SearchCards() {
   const [query, setQuery] = useState("");
@@ -10,11 +11,18 @@ export default function SearchCards() {
   const [tcgbookmarks, settcgBookmarks] = useState([]);
   const [bookmarksInitialized, setBookmarksInitialized] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [soldResults, setSoldResults] = useState([]);
+
 
   const fetchCards = async (searchTerm) => {
     try {
       const encodedQuery = encodeURIComponent(searchTerm || query);
       setLoading(true);
+      // Fetch SOLD items
+      const soldRes = await fetch(
+        `https://tcgbackend.onrender.com/api/sold?term=${encodedQuery}`
+      );
+      const soldData = await soldRes.json();
       // Fetch AUCTION items
       const auctionRes = await fetch(
         `https://tcgbackend.onrender.com/api/search?q=${encodedQuery}&filter=${encodeURIComponent("buyingOptions:{AUCTION}")}`
@@ -27,7 +35,8 @@ export default function SearchCards() {
         `https://tcgbackend.onrender.com/api/search?q=${encodedQuery}&filter=${encodeURIComponent("buyingOptions:{FIXED_PRICE}")}`
       );
       const fixedData = await fixedRes.json();
-
+      
+      setSoldResults(soldData || []);
       setAuctionResults(auctionData.itemSummaries || []);
       setFixedPriceResults(fixedData.itemSummaries || []);
       setError(null);
@@ -118,9 +127,56 @@ useEffect(() => {
           <p style={{ textAlign: "center" }}>Loading...</p>
         </div>
       )}
-      {/* Auction Section */}
+
       {hasSearched && (
         <>
+
+        {/* Sold Listings Section */}
+
+      <div className="hello">
+        <h2 className='subHead' style={{ fontFamily: '"Luckiest Guy", sans-serif', textAlign: 'center' }}>Sold Listings</h2>
+        <ul className="cardUl">
+          {soldResults.map((item, i) => (
+            <li key={i}>
+              <strong>{item.title}</strong>
+              <div>
+                <br />
+                {item.wasOfferAccepted ? (
+                  <>
+                    <span style={{ textDecoration: 'line-through', color: 'gray' }}>
+                      ${item.originalPrice}
+                    </span>{" "}
+                    <span style={{ color: 'green', fontWeight: 'bold' }}>
+                      ${item.salePrice}
+                    </span>
+                  </>
+                ) : (
+                  <span style={{ color: 'green', fontWeight: 'bold' }}>
+                    {item.salePrice}
+                  </span>
+                )}
+              </div>
+              {item.gradeService && (
+                <p>{item.gradeService} {item.gradeScore}</p>
+              )}
+              <p>{item.date}</p>
+              {item.image ? <img width={100} src={item.image} /> : <img width={200} src={cnf} />}
+              <a
+                href={item.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="vob"
+              >
+                View on eBay
+              </a>
+            </li>
+          ))}
+          {soldResults.length === 0 && <p>No sold results found.</p>}
+        </ul>
+      </div>
+
+      {/* Auction Section */}
+
       <div className="hello">
         <h2 className='subHead' style={{fontFamily: '"Luckiest Guy", sans-serif', textAlign: 'center'}}>Auction Listings</h2>
         <ul className="cardUl">
@@ -129,7 +185,7 @@ useEffect(() => {
               <strong>{item.title}</strong>
               <p>Current Bid: ${`${item.currentBidPrice.value} ${item.currentBidPrice.currency}`}</p>
               <p>No. of bids: {item.bidCount}</p>
-              <img width={200} src={item.image.imageUrl} />
+              <img width={100} src={item.image.imageUrl} />
               <a
                 href={item.itemWebUrl}
                 target="_blank"
@@ -145,6 +201,7 @@ useEffect(() => {
       </div>
 
       {/* Fixed Price Section */}
+
       <div className="hello">
         <h2 className='subHead' style={{fontFamily: '"Luckiest Guy", sans-serif', textAlign: 'center'}}>Fixed Price Listings</h2>
         <ul className="cardUl">
@@ -152,7 +209,7 @@ useEffect(() => {
             <li key={item.itemId}>
               <strong>{item.title}</strong>
               <div>{item.price?.value} {item.price?.currency}</div>
-              <img width={200} src={item.image.imageUrl} />
+              <img width={100} src={item.image.imageUrl} />
               <a
                 href={item.itemWebUrl}
                 target="_blank"
