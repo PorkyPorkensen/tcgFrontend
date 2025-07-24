@@ -26,15 +26,19 @@ export default function Header() {
     <div className="headDiv">
       <div className="logoDiv">
         <h1 className="header"><a  className='headA' href="/">TCG.Tracker</a></h1>
+        <br />
+        
         <DotLottieReact
           src="https://lottie.host/df00648d-9a70-4a85-834c-76946a0134d2/dAAAVRBmbm.lottie"
           loop
           autoplay
           className="pokeBall"
         />
+        
       </div>
 
       <div className="linkDiv">
+        <h1>TT</h1>
         <Link to="/" className={({ isActive }) => isActive ? "active" : ""}>eBay Lookup</Link> 
         <Link to="/cards" className={({ isActive }) => isActive ? "active" : ""}>Pokemon</Link>  
         <Link to="/mycards" className={({ isActive }) => isActive ? "active" : ""}>My Cards</Link>  
