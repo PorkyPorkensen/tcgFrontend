@@ -121,6 +121,10 @@ const addToCollection = async (card, condition = "NM") => {
               <em> Blaine's Charizard</em>, <em>Pikachu & Zekrom GX</em>, be sure to include proper
               punctuation and spacing.
             </p>
+            <p>
+              Another common issue is with data not properly loading from the API.
+              If you think this is the case, try refreshing the page and search again.
+            </p>
           </div>
         )}
 

@@ -10,7 +10,8 @@ export default function FAQ() {
       </p>
       <h2>Whats taking so long?</h2>
       <p>
-        Because as of this moment, my server is being hosted on a free tier, it can take up to fifty seconds to load everything if inactive. I am working on getting a paid server soon.
+        Because as of this moment, my server is being hosted on a free tier, it can take up to fifty seconds to load everything if inactive. I am working on getting a paid server soon. This on top of the fact
+        that the PokemonTCGApi is also a free API (shout-out to Andrew), it can be slow at times. I am working on optimizing the code to make it faster.
       </p>
       <h2>How do I search for card sales?</h2>
       <p>
