@@ -38,7 +38,6 @@ export default function Header() {
       </div>
 
       <div className="linkDiv">
-        <h1>TT</h1>
         <Link to="/" className={({ isActive }) => isActive ? "active" : ""}>eBay Lookup</Link> 
         <Link to="/cards" className={({ isActive }) => isActive ? "active" : ""}>Pokemon</Link>  
         <Link to="/mycards" className={({ isActive }) => isActive ? "active" : ""}>My Cards</Link>  
