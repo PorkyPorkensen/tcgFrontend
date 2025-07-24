@@ -12,6 +12,18 @@ export default function SearchCards() {
   const [bookmarksInitialized, setBookmarksInitialized] = useState(false);
   const [loading, setLoading] = useState(false);
   const [soldResults, setSoldResults] = useState([]);
+  const EPN_CAMPAIGN_ID = "5339116843";
+
+const appendEPNTracking = (url) => {
+  try {
+    const u = new URL(url);
+    u.searchParams.set("campid", EPN_CAMPAIGN_ID);
+    return u.toString();
+  } catch (err) {
+    console.error("Invalid eBay URL:", url);
+    return url;
+  }
+};
 
 
   const fetchCards = async (searchTerm) => {
@@ -80,7 +92,7 @@ useEffect(() => {
   };
 
   return (
-    <div>
+    <div className="container">
       <div className="inputDiv">
               <input
                 type="text"
@@ -123,106 +135,132 @@ useEffect(() => {
             src="https://lottie.host/f5a82384-f2ff-457a-a3ea-0a26c9825f8a/WEarna6TOe.lottie"
             loop
             autoplay
+            className="pikachuLoading"
           />
           <p style={{ textAlign: "center" }}>Loading...</p>
         </div>
       )}
 
+      {!hasSearched && (
+        <div>
+        <div className="howToUse">
+          <h3>View Listings</h3>
+          <p>
+            On this page, enter a Pokémon card name in the search bar and click search. 
+            You may bookmark a search by clicking the button beside search
+          </p>
+          <h3>Add Cards to your Collection</h3>
+          <p>
+            Head to the <a style={{textDecoration: 'underline'}} href="/cards">Pokemon</a> tab to view all cards for a specific Pokémon.
+            You can select a condition for each card and add it to your collection.
+          </p>
+          <h3>View Your Cards</h3>
+          <p>
+            Go to the <a style={{textDecoration: 'underline'}} href="/mycards">My Cards</a> tab to see all the cards you've added, their conditions, average sold prices, and a rough Estimated
+            value of your collection.
+          </p>
+
+        </div>
+        <div className="howToUse">
+                  <p style={{fontSize: '0.7em', marginTop: '3em'}}>NOTE: clicking on links to some listings from this site and make a purchase,  can result in this site earning a commission. Affiliate programs and affiliations include, but are not limited to, the eBay Partner Network.
+</p>
+        </div>
+        </div>
+
+        
+      )}
       {hasSearched && (
         <>
 
-        {/* Sold Listings Section */}
+{/* Sold Listings Section */}
+<div className="hello">
+  <h2 className='subHead' style={{ fontFamily: '"Luckiest Guy", sans-serif', textAlign: 'center' }}>Sold Listings (USD)</h2>
 
-      <div className="hello">
-        <h2 className='subHead' style={{ fontFamily: '"Luckiest Guy", sans-serif', textAlign: 'center' }}>Sold Listings</h2>
-        <ul className="cardUl">
-          {soldResults.map((item, i) => (
-            <li key={i}>
-              <strong>{item.title}</strong>
-              <div>
-                <br />
-                {item.wasOfferAccepted ? (
-                  <>
-                    <span style={{ textDecoration: 'line-through', color: 'gray' }}>
-                      ${item.originalPrice}
-                    </span>{" "}
-                    <span style={{ color: 'green', fontWeight: 'bold' }}>
-                      ${item.salePrice}
-                    </span>
-                  </>
-                ) : (
-                  <span style={{ color: 'green', fontWeight: 'bold' }}>
-                    {item.salePrice}
-                  </span>
-                )}
-              </div>
-              {item.gradeService && (
-                <p>{item.gradeService} {item.gradeScore}</p>
-              )}
-              <p>{item.date}</p>
-              {item.image ? <img width={100} src={item.image} /> : <img width={200} src={cnf} />}
-              <a
-                href={item.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="vob"
-              >
-                View on eBay
-              </a>
-            </li>
-          ))}
-          {soldResults.length === 0 && <p>No sold results found.</p>}
-        </ul>
-      </div>
+  <ul className="resultsList">
+    {soldResults.map((item, i) => (
+      <li key={i}>
+        <strong>{item.title}</strong>
+        <p>
+          {item.wasOfferAccepted ? (
+            <>
+              <span style={{ textDecoration: 'line-through', color: 'gray' }}>
+                {item.originalPrice}
+              </span>{" "}
+              <span style={{ color: 'limegreen', fontWeight: 'bold' }}>
+                SOLD {item.salePrice}
+              </span>
+            </>
+          ) : (
+            <span style={{ color: 'limegreen', fontWeight: 'bold' }}>
+              SOLD {item.salePrice}
+            </span>
+          )}
+        </p>
+        {item.gradeService ?
+          <p>{item.gradeService} {item.gradeScore}</p> : <p>RAW</p>
+        }
+        <p>{item.date}</p>
+        <img width={150} src={item.image || cnf} alt="Sold item" />
+        <a
+          href={appendEPNTracking(item.link)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="vob"
+        >
+          View on eBay
+        </a>
+      </li>
+    ))}
+    {soldResults.length === 0 && <p>No sold results found.</p>}
+  </ul>
+</div>
 
-      {/* Auction Section */}
+{/* Auction Listings */}
+<div className="hello">
+  <h2 className='subHead' style={{ fontFamily: '"Luckiest Guy", sans-serif', textAlign: 'center' }}>Auction Listings</h2>
+  <ul className="resultsList">
+    {auctionResults.map((item) => (
+      <li key={item.itemId}>
+        <strong>{item.title}</strong>
+        <p>Current Bid: <span style={{ color: 'limegreen', fontWeight: 'bold' }}>${item.currentBidPrice?.value} {item.currentBidPrice?.currency}</span></p>
+        <p>Bids: {item.bidCount}</p>
+        <img width={150} src={item.image.imageUrl} alt="Auction item" />
+        <a
+          href={appendEPNTracking(item.itemWebUrl)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="vob"
+        >
+          View on eBay
+        </a>
+      </li>
+    ))}
+    {auctionResults.length === 0 && <p>No auction results found.</p>}
+  </ul>
+</div>
 
-      <div className="hello">
-        <h2 className='subHead' style={{fontFamily: '"Luckiest Guy", sans-serif', textAlign: 'center'}}>Auction Listings</h2>
-        <ul className="cardUl">
-          {auctionResults.map((item) => (
-            <li key={item.itemId}>
-              <strong>{item.title}</strong>
-              <p>Current Bid: ${`${item.currentBidPrice.value} ${item.currentBidPrice.currency}`}</p>
-              <p>No. of bids: {item.bidCount}</p>
-              <img width={100} src={item.image.imageUrl} />
-              <a
-                href={item.itemWebUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="vob"
-              >
-                View on eBay
-              </a>
-            </li>
-          ))}
-          {auctionResults.length === 0 && <p>No auction results found.</p>}
-        </ul>
-      </div>
-
-      {/* Fixed Price Section */}
-
-      <div className="hello">
-        <h2 className='subHead' style={{fontFamily: '"Luckiest Guy", sans-serif', textAlign: 'center'}}>Fixed Price Listings</h2>
-        <ul className="cardUl">
-          {fixedPriceResults.map((item) => (
-            <li key={item.itemId}>
-              <strong>{item.title}</strong>
-              <div>{item.price?.value} {item.price?.currency}</div>
-              <img width={100} src={item.image.imageUrl} />
-              <a
-                href={item.itemWebUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="vob"
-              >
-                View on eBay
-              </a>
-            </li>
-          ))}
-          {fixedPriceResults.length === 0 && <p>No fixed price results found.</p>}
-        </ul>
-      </div>
+{/* Fixed Price Listings */}
+<div className="hello">
+  <h2 className='subHead' style={{ fontFamily: '"Luckiest Guy", sans-serif', textAlign: 'center' }}>Fixed Price Listings</h2>
+  <ul className="resultsList">
+    {fixedPriceResults.map((item) => (
+      <li key={item.itemId}>
+        <strong>{item.title}</strong>
+        <p><span style={{ color: 'limegreen', fontWeight: 'bold' }}>${item.price?.value} {item.currentBidPrice?.currency}</span></p>
+        <img width={150} src={item.image.imageUrl} alt="Fixed price item" />
+        <a
+          href={appendEPNTracking(item.itemWebUrl)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="vob"
+        >
+          View on eBay
+        </a>
+      </li>
+    ))}
+    {fixedPriceResults.length === 0 && <p>No fixed price results found.</p>}
+  </ul>
+</div>
       </>)}
     </div>
   );

@@ -13,6 +13,12 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+.container {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
 a {
   font-weight: 600;
   letter-spacing: 0.03em;
@@ -26,6 +32,13 @@ a:hover {
 .pokeBall {
   width: 115px;
   margin-left: -10px;
+}
+.header {
+  margin-left: 15px;
+}
+
+.headA:hover {
+  color: rgba(255, 255, 255, 0.87);
 }
 select:hover {
   cursor: pointer;
@@ -83,7 +96,7 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-.cardUl li {
+.resultsList li {
 
   background-color: #2e344e;
   color: #f9f9f9;
@@ -97,22 +110,25 @@ button:focus-visible {
   border: 2px solid #00bfff;
   box-shadow: 2px 2px 6px rgb(0, 0, 0);
   transition: transform 0.2s, box-shadow 0.2s;
+
 }
 
-.cardUl li:hover {
+.resultsList li:hover {
   transform: translateY(-5px);
   box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
 }
 
-.cardUl li img {
+.resultsList li img {
   max-width: 100%;
-  height: auto;
+  max-height: 200px;
   border-radius: 8px;
   border: 2px solid #ffcc00;
+  margin-bottom: 1em
 }
 .inputDiv {
   display: flex;
   width: 90%;
+  max-width: 775px;
   justify-content: center;
   align-items: center;
   margin: 0.5em auto;
@@ -122,17 +138,25 @@ button:focus-visible {
   height: 42px;
 }
 
-.cardUl {
-  display: grid;
-  grid-template-columns: 1fr; /* 1 column for mobile */
-  gap: 1em;
-  width: 100%;
-  padding: 1em 0;
-  justify-items: center;
+.resultsList {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+.resultsList li {
+  background: #23233b;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 1em;
+  width: 250px;
+  text-align: center;
 }
 
 .vob {
-  margin-top: 1em;;
+  margin-top: auto;
   color: #00bfff;
   text-decoration: underline;
   font-weight: 500;
@@ -150,7 +174,21 @@ button:focus-visible {
 
 
 
-
+.howToUse {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 70%;
+  max-width: 800px;
+  margin: 30px auto;
+  padding: 2em;
+  background-color: #16192598;
+  color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.507);
+}
 
 .subHead {
   font-family: "Luckiest Guy", sans-serif;
@@ -166,18 +204,46 @@ button:focus-visible {
   display: flex;
   width: 90%;
   align-items: center;
-  margin: 0.5em auto;
   justify-content: center;
+  margin: auto;
 }
 .linkDiv {
+  width: 90%;
   display: flex;
-  min-width: 50%;
+  flex-wrap: wrap;
   justify-content: center;
-  margin: 0 auto 3em auto;
-  text-align: center;
   align-items: center;
-  gap: 0.5em
+  gap: 1em;
+  padding: 1em 0;
+  background-color: #002c5f; /* dark blue background */
+  border-radius: 10px;
+  margin: 0 auto 2em auto;
+  max-width: 860px;
 }
+
+.linkDiv a, .logOutBtn {
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #ffffff;
+  text-decoration: none;
+  padding: 0.5em 1em;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  background-color: rgba(255, 255, 255, 0.1); /* subtle background */
+}
+
+.linkDiv a:hover, .logOutBtn:hover {
+  background-color: #00bfff;
+  color: #002c5f;
+  transform: scale(1.05);
+}
+
+.linkDiv a.active {
+  background-color: #00bfff;
+  color: #002c5f;
+  font-weight: 800;
+}
+
 
 .cardDiv {
   border: 2px solid #00bfff;
@@ -231,7 +297,11 @@ button:focus-visible {
   margin: 0 auto;
   background-color: #151629;
 }
-
+.pikachuLoading {
+  width: 250px;
+  height: 250px;
+  margin: 0 auto;
+}
 
 .signupForm button {
   width: 80%;
@@ -256,16 +326,8 @@ button:focus-visible {
 
 }
 .logOutBtn {
-  background-color: inherit;
-  margin: 0;
-  padding: 0;
-  color: #ffffff;
-}
-
-.logOutBtn:hover {
-  color: #00bfff;
-  text-decoration: underline;
-  border: none;
+  background-color: #b0b9e0;
+  color: #000000;
 
 }
 
@@ -285,16 +347,51 @@ button:focus-visible {
 }
 
 .myCards { 
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
-  gap: 1rem; 
-  padding: 1rem;
-  align-items: center;
-  justify-items: center;
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.recalculateBtn {
+  background-color: #2e85bedc;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.6);
+  margin-top: 10px;
+}
+
+.recalculateBtn:hover, .recalculateBtn:focus, .recalculateBtn:active {
+  background-color: #0d273bb7;
+  color: #f9f9f9;
+  transition: background-color 0.3s ease;
+}
+
+.deleteCardBtn {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.76);
+}
+
+.deleteCardBtn:hover, .deleteCardBtn:focus, .deleteCardBtn:active {
+  background-color: #c0392b;
+  color: #f9f9f9;
+  transition: background-color 0.3s ease;
 }
 @media (min-width: 600px){
-  
-  .cardUl {
+  .linkDiv {
+    width: 90%;;
+  }
+  .resultsList {
     grid-template-columns: repeat(2, minmax(300px, 1fr));
     align-items: stretch;
     gap: 2em;
@@ -309,7 +406,11 @@ button:focus-visible {
 
 @media (min-width: 1000px){
   
-  .cardUl {
+
+  .linkDiv {
+    min-width: 860px;
+  }
+  .resultsList {
     grid-template-columns: repeat(2, minmax(300px, 1fr));
     align-items: stretch;
     gap: 2em;

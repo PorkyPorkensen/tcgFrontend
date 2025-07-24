@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { auth, db } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, query, where, getDocs, deleteDoc, doc } from "firebase/firestore";
@@ -9,18 +9,13 @@ export default function MyCards() {
   const [user, setUser] = useState(null);
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [averagePrices, setAveragePrices] = useState({});
-
-
-  // 🟢 Memoized value for average prices
-  const totalValue = useMemo(() => {
-  const values = Object.values(averagePrices)
-    .map((price) => parseFloat(price))
-    .filter((num) => !isNaN(num));
-
-  const total = values.reduce((sum, val) => sum + val, 0);
-  return total.toFixed(2);
-}, [averagePrices]);
+  const [averagePrices, setAveragePrices] = useState(() => {
+    const saved = localStorage.getItem("averagePrices");
+    return saved ? JSON.parse(saved) : {};
+  });
+  const [totalValue, setTotalValue] = useState(() => {
+    return localStorage.getItem("totalValue") || "0.00";
+  });
 
   // 🔄 Handle user auth state + fetch user's cards
   useEffect(() => {
@@ -51,20 +46,7 @@ export default function MyCards() {
     return () => unsubscribe();
   }, []);
 
-  // 🗑️ Delete a card from Firestore and local state
-  const deleteCard = async (cardId) => {
-    const confirmDelete = window.confirm("Are you sure you want to remove this card?");
-    if (!confirmDelete) return;
-
-    try {
-      await deleteDoc(doc(db, "collections", cardId));
-      setCards((prev) => prev.filter((card) => card.id !== cardId));
-    } catch (error) {
-      alert("Error deleting card: " + error.message);
-    }
-  };
-
-  // 💰 Fetch average sold price from backend with delay
+  // 💰 Fetch average sold price from backend
   const fetchSoldAverage = async (term, cardId, delay = 500) => {
     await new Promise((res) => setTimeout(res, delay));
 
@@ -90,9 +72,21 @@ export default function MyCards() {
     }
   };
 
-  // 🟠 Trigger fetch for sold prices with throttling
+  // 🧮 Update totalValue and cache in localStorage when prices change
   useEffect(() => {
-    if (cards.length > 0) {
+    const values = Object.values(averagePrices)
+      .map((price) => parseFloat(price))
+      .filter((num) => !isNaN(num));
+
+    const total = values.reduce((sum, val) => sum + val, 0).toFixed(2);
+    setTotalValue(total);
+    localStorage.setItem("totalValue", total);
+    localStorage.setItem("averagePrices", JSON.stringify(averagePrices));
+  }, [averagePrices]);
+
+  // ⚡ Initial fetch for sold prices (only if not cached)
+  useEffect(() => {
+    if (cards.length > 0 && Object.keys(averagePrices).length === 0) {
       let delay = 0;
 
       cards.forEach((card) => {
@@ -106,6 +100,39 @@ export default function MyCards() {
     }
   }, [cards]);
 
+  // 🗑️ Delete a card from Firestore and local state
+  const deleteCard = async (cardId) => {
+    const confirmDelete = window.confirm("Are you sure you want to remove this card?");
+    if (!confirmDelete) return;
+
+    try {
+      await deleteDoc(doc(db, "collections", cardId));
+      setCards((prev) => prev.filter((card) => card.id !== cardId));
+
+      // Clean up averagePrices and recalculate total
+      setAveragePrices((prev) => {
+        const { [cardId]: _, ...rest } = prev;
+        return rest;
+      });
+    } catch (error) {
+      alert("Error deleting card: " + error.message);
+    }
+  };
+
+  // 🔁 Manual recalculation trigger
+  const handleRecalculate = () => {
+    let delay = 0;
+
+    cards.forEach((card) => {
+      const condition = card.condition?.toUpperCase?.();
+      const conditionLabel = condition === "GRADED" ? "PSA" : condition;
+      const searchTerm = `${card.cardName} ${card.cardNumber} ${conditionLabel}`;
+
+      delay += 500;
+      fetchSoldAverage(searchTerm, card.id, delay);
+    });
+  };
+
   // ⏳ Loading state
   if (loading) {
     return (
@@ -114,6 +141,7 @@ export default function MyCards() {
           src="https://lottie.host/f5a82384-f2ff-457a-a3ea-0a26c9825f8a/WEarna6TOe.lottie"
           loop
           autoplay
+          className="pikachuLoading"
         />
         <p style={{ textAlign: "center" }}>Loading...</p>
       </div>
@@ -133,9 +161,23 @@ export default function MyCards() {
         flexDirection: "column",
         alignItems: "center",
         marginTop: "20px",
+        marginBottom: "40px",
       }}
     >
-      <h1 style={{ fontSize: "2em", textAlign: "center" }}>My Cards</h1>
+      <h1 style={{ fontSize: "3em", textAlign: "center" }}>My Collection</h1>
+
+      <div style={{ width: '100%', display: "flex", flexDirection: "column", alignItems: "center", margin: "20px auto", marginBottom: "40px" }}>
+        <h1 style={{ fontSize: "1.8em", textAlign: "center" }}>
+          Total Estimated Value: <span style={{ color: "#ffcc00" }}>${totalValue}</span>
+        </h1>
+
+        <button
+          onClick={handleRecalculate}
+          className="recalculateBtn"
+        >
+          🔄 Recalculate Card Values
+        </button>
+      </div>
 
       {cards.length === 0 ? (
         <p style={{ textAlign: "center" }}>You haven’t saved any cards yet.</p>
@@ -155,33 +197,21 @@ export default function MyCards() {
               <p>
                 Avg Sold Price:{" "}
                 {averagePrices[card.id]
-                  ? `$${averagePrices[card.id]}`
+                  ? isNaN(averagePrices[card.id])
+                    ? averagePrices[card.id]
+                    : `$${averagePrices[card.id]}`
                   : "Calculating..."}
               </p>
               <button
                 onClick={() => deleteCard(card.id)}
-                style={{
-                  marginTop: "10px",
-                  backgroundColor: "#e74c3c",
-                  color: "white",
-                  border: "none",
-                  padding: "6px 12px",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                  boxShadow: "1px 2px 4px rgba(0, 0, 0, 0.76)",
-                }}
+                className="deleteCardBtn"
               >
                 Remove
               </button>
             </div>
           ))}
-
         </div>
-        
       )}
-        <div style={{ width: '100%', display: "flex", justifyContent: "center", margin: "20px auto" }}>
-          <h1 style={{ fontSize: "2em", textAlign: "center" }}>Total Estimated Value: <span style={{color: "#ffcc00"}}>${totalValue}</span></h1>
-        </div>
     </div>
   );
 }

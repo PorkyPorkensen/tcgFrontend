@@ -46,26 +46,38 @@ const conditions = ['NM', 'LP', 'MP', 'HP', 'DMG', 'POOR', 'GRADED 10', 'GRADED 
 const addToCollection = async (card, condition = "NM") => {
   try {
     const user = auth.currentUser;
+
     if (!user) {
       alert("You must be logged in to add cards.");
       return;
     }
 
-    await addDoc(collection(db, "collections"), {
-      userId: user.uid,
-      cardId: card.id,
-      cardName: card.name,
-      setName: card.set.name,
-      cardNumber: card.number,
-      imageUrl: card.images.small,
+    const cardData = {
+      ...card,
       condition,
-      addedAt: new Date(),
+    };
+
+    const response = await fetch("https://tcgbackend.onrender.com/api/cards/add", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userId: user.uid,
+        card: cardData,
+      }),
     });
 
-    alert(`${card.name} added to your collection!`);
+    const result = await response.json();
+
+    if (!response.ok) {
+      alert(result.error || "Failed to add card.");
+    } else {
+      alert(`${card.name} added to your collection!`);
+    }
   } catch (e) {
     console.error("Error adding card:", e);
-    alert("Failed to add card.");
+    alert("Something went wrong while adding the card.");
   }
 };
     

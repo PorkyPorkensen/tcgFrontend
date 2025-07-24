@@ -25,7 +25,7 @@ export default function Header() {
   return (
     <div className="headDiv">
       <div className="logoDiv">
-        <h1 className="header">TCG.Tracker</h1>
+        <h1 className="header"><a  className='headA' href="/">TCG.Tracker</a></h1>
         <DotLottieReact
           src="https://lottie.host/df00648d-9a70-4a85-834c-76946a0134d2/dAAAVRBmbm.lottie"
           loop
@@ -35,16 +35,16 @@ export default function Header() {
       </div>
 
       <div className="linkDiv">
-        <Link to="/">eBay Lookup</Link> {"|"}  
-        <Link to="/cards">Pokemon</Link> {"|"}  
-        <Link to="/mycards">My Cards</Link> {"|"}  
-        <Link to="/faq">FAQ</Link> {"|"}  
+        <Link to="/" className={({ isActive }) => isActive ? "active" : ""}>eBay Lookup</Link> 
+        <Link to="/cards" className={({ isActive }) => isActive ? "active" : ""}>Pokemon</Link>  
+        <Link to="/mycards" className={({ isActive }) => isActive ? "active" : ""}>My Cards</Link>  
+        <Link to="/faq" className={({ isActive }) => isActive ? "active" : ""}>FAQ</Link>  
 
         {!loading && currentUser && (
           <button className='logOutBtn' onClick={handleLogout}>Sign Out</button>
         )}
         {!loading && !currentUser && (
-          <Link to="/signup">Sign Up/In</Link>
+          <Link to="/signup" className={({ isActive }) => isActive ? "active" : ""}>Sign Up/In</Link>
         )}
 
       </div>
