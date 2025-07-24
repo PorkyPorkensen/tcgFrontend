@@ -13,12 +13,14 @@ export default function Cards(){
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [selectedConditions, setSelectedConditions] = useState({});
+    const [hasSearched, setHasSearched] = useState(false);
     
 const conditions = ['NM', 'LP', 'MP', 'HP', 'DMG', 'POOR', 'GRADED 10', 'GRADED 9', 'GRADED 8', 'GRADED 7', 'GRADED 6', 'GRADED 5', 'GRADED 4', 'GRADED 3', 'GRADED 2', 'GRADED 1'];
   const handleSearch = async () => {
     if (!query.trim()) return;
 
     setLoading(true);
+    setHasSearched(true);
     setError(null);
     let formattedQuery = query.trim();
 
@@ -109,7 +111,18 @@ const addToCollection = async (card, condition = "NM") => {
             <p style={{textAlign: 'center'}}>Loading....</p>
         </div>  
 )}
-      {error && <p style={{ color: "red" }}>{error}</p>}
+        {!loading && hasSearched && cards.length === 0 && (
+          <div className="errDiv">
+            <h2 style={{fontFamily: "Luckiest Guy" }}>
+              Couldn't Catch this Pokémon...
+            </h2>
+            <p>
+              Tip: Try to be <strong>EXACT</strong> with your search. Example: For cards like
+              <em> Blaine's Charizard</em>, <em>Pikachu & Zekrom GX</em>, be sure to include proper
+              punctuation and spacing.
+            </p>
+          </div>
+        )}
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginTop: "2rem", justifyContent: "center" }}>
         {cards.map((card) => (

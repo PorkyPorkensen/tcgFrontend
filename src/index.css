@@ -331,6 +331,23 @@ button:focus-visible {
 
 }
 
+.errDiv {
+  background-color: #1111117e;
+  color: #e0e0e0;
+  padding: 1em;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.507);
+  margin: 1em auto;
+  text-align: center;
+  width: 60%;
+}
+
+.errDiv h2 {
+  color: #ff0000dc;
+  font-size: 1.5em;
+  margin-bottom: 0.5em;
+}
+
 .bookmark1:active, .bookmark2:active {
   background-color: #ffcc00;
 }
