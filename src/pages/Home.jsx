@@ -11,6 +11,7 @@ export default function Home() {
     return (
     <div>
       <h1 style={{fontSize: '2em', textAlign: 'center'}}>eBay Lookup</h1>
+      <p style={{textAlign: 'center'}}><strong>NOTE:</strong> The first search may take up to 60s if server has been inactive for 15min</p>
       <SearchCards />
     </div>
   );

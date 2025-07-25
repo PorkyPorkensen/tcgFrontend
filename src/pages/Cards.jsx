@@ -86,6 +86,7 @@ const addToCollection = async (card, condition = "NM") => {
   return (
     <div style={{ padding: "1rem" }}>
       <h2 className='subHead'>Search Pokémon Cards</h2>
+      <p style={{textAlign: 'center'}}><strong>NOTE:</strong> Depending on the status of the API this page is based on, searches may be slow.</p>
       <div className="inputDiv">
         <input
         type="text"
