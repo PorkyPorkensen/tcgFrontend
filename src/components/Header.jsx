@@ -25,7 +25,7 @@ export default function Header() {
   return (
     <div className="headDiv">
       <div className="logoDiv">
-        <h1 className="header"><a  className='headA' href="/">TCG Tracker</a></h1>
+        <h1 className="header"><a  className='headA' href="/">TCGTracker</a></h1>
         <br />
         
         <DotLottieReact
