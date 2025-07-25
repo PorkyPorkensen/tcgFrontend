@@ -143,6 +143,9 @@ useEffect(() => {
 
       {!hasSearched && (
         <div>
+          <div className="howToUse">
+            <h2>MTG COMING SOON!!</h2>
+          </div>
         <div className="howToUse">
           <h3>View Listings</h3>
           <p>
