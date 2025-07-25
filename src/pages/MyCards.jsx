@@ -165,11 +165,13 @@ export default function MyCards() {
       }}
     >
       <h1 style={{ fontSize: "3em", textAlign: "center" }}>My Collection</h1>
-
+      
       <div style={{ width: '100%', display: "flex", flexDirection: "column", alignItems: "center", margin: "20px auto", marginBottom: "40px" }}>
         <h1 style={{ fontSize: "1.8em", textAlign: "center" }}>
           Total Estimated Value: <span style={{ color: "#ffcc00" }}>${totalValue}</span>
         </h1>
+        <p style={{maxWidth: '50%', fontSize: "0.8em", textAlign: 'center'}}><strong>NOTE:</strong> This number is an estimate. It is calculated by searching the card name, card number, and condition together and taking the results
+      of that search on eBay and averaging out the most recent 8 sales. This may lead to innacurate pricing if your card is not commonly traded.</p>
 
         <button
           onClick={handleRecalculate}
