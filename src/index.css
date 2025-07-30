@@ -75,6 +75,7 @@ input {
   color: #f9f9f9;
   width: 50%;
   transition: border-color 0.25s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.651);
 }
 button {
   border-radius: 0 8px 8px 0;
@@ -136,6 +137,15 @@ button:focus-visible {
 
 .inputDiv button {
   height: 42px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.651);
+
+}
+
+.inputDiv button:hover {
+  scale: 1.05;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.651);
+  border: 1px solid #ffcc00;
+
 }
 
 .resultsList {
@@ -162,6 +172,53 @@ button:focus-visible {
   font-weight: 500;
   transition: color 0.3s ease;
 }
+
+.horizontalScroll {
+  display: flex;
+    overflow-x: auto;
+  overflow-y: hidden;
+  
+  scroll-snap-type: x mandatory;
+  gap: 1rem;
+  padding: 1em;
+  scroll-padding: 1em;
+  max-width: 80vw;
+  box-sizing: border-box;
+  margin: 0 auto;
+    cursor: grab;
+
+}
+
+.horizontalScroll:active {
+  cursor: grabbing;
+}
+
+.cardItem {
+  flex: 0 0 auto;
+  width: 250px;
+  scroll-snap-align: start;
+  background-color: #2e344e;
+  color: #f9f9f9;
+  border-radius: 8px;
+  text-align: center;
+  padding: 1em;
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.5);
+  border: 2px solid #00bfff;
+}
+.cardItem img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 2px solid #ffcc00;
+  margin: 0 auto 1em auto;
+}
+
+.cardItem .vob {
+  display: block;
+}
+
+
+
 
 
 .hello {
@@ -348,6 +405,19 @@ button:focus-visible {
   margin-bottom: 0.5em;
 }
 
+.cr:hover {
+  border: 1px solid #e96464;
+  text-decoration: underline;
+}
+.cr {
+   display: block;
+   border-radius: 8px;
+   margin: 0 auto;
+   background-color: #00151ba1;
+   color: whitesmoke;
+   margin-top: 2em;
+}
+
 .bookmark1:active, .bookmark2:active {
   background-color: #ffcc00;
 }
@@ -370,6 +440,7 @@ button:focus-visible {
   flex-wrap: wrap;
   gap: 1rem;
   justify-content: center;
+  max-width: 90%;
 }
 
 .recalculateBtn {

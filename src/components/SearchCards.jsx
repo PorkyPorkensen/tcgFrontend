@@ -14,6 +14,7 @@ export default function SearchCards() {
   const [soldResults, setSoldResults] = useState([]);
   const EPN_CAMPAIGN_ID = "5339116843";
 
+
 const appendEPNTracking = (url) => {
   try {
     const u = new URL(url);
@@ -52,6 +53,11 @@ const appendEPNTracking = (url) => {
       setAuctionResults(auctionData.itemSummaries || []);
       setFixedPriceResults(fixedData.itemSummaries || []);
       setError(null);
+
+      localStorage.setItem("lastQuery", encodedQuery);
+      localStorage.setItem("lastSoldResults", JSON.stringify(soldData || []));
+      localStorage.setItem("lastAuctionResults", JSON.stringify(auctionData.itemSummaries || []));
+      localStorage.setItem("lastFixedPriceResults", JSON.stringify(fixedData.itemSummaries || []));
     } catch (err) {
       console.error(err);
       setError("Something went wrong. Please try again.");
@@ -60,7 +66,39 @@ const appendEPNTracking = (url) => {
     setLoading(false);
   };
 
+  const handleClearResults = () => {
+  setQuery("");
+  setSoldResults([]);
+  setAuctionResults([]);
+  setFixedPriceResults([]);
+  setHasSearched(false);
+  setError(null);
+  localStorage.removeItem("lastQuery");
+  localStorage.removeItem("lastSoldResults");
+  localStorage.removeItem("lastAuctionResults");
+  localStorage.removeItem("lastFixedPriceResults");
+};
+
+
+
 // Function to handle adding a card to bookmarks
+
+useEffect(() => {
+  const savedQuery = localStorage.getItem("lastQuery");
+  const savedSold = localStorage.getItem("lastSoldResults");
+  const savedAuction = localStorage.getItem("lastAuctionResults");
+  const savedFixed = localStorage.getItem("lastFixedPriceResults");
+
+  if (savedQuery && savedSold && savedAuction && savedFixed) {
+    setQuery(decodeURIComponent(savedQuery));
+    setSoldResults(JSON.parse(savedSold));
+    setAuctionResults(JSON.parse(savedAuction));
+    setFixedPriceResults(JSON.parse(savedFixed));
+    setHasSearched(true);
+  }
+}, []);
+
+
 
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem("tcgbookmarks"));
@@ -110,9 +148,9 @@ useEffect(() => {
                 Search
               </button> 
               <button  className='bookmark3' style={{borderRadius: '0 8px 8px 0', backgroundColor: '#2a2e45'}}onClick={handleBookmark}>🔖</button>
-
+              
       </div>
-      
+     
 
       {error && <p>{error}</p>}
       
@@ -177,6 +215,7 @@ useEffect(() => {
 
 {/* Sold Listings Section */}
 <div className="hello">
+   <button className="cr" style={{}}onClick={handleClearResults}>Clear Results</button>
   <h2 className='subHead' style={{ fontFamily: '"Luckiest Guy", sans-serif', textAlign: 'center' }}>Sold Listings (USD)</h2>
 
   <ul className="resultsList">
@@ -219,11 +258,11 @@ useEffect(() => {
 </div>
 
 {/* Auction Listings */}
-<div className="hello">
+<div className="">
   <h2 className='subHead' style={{ fontFamily: '"Luckiest Guy", sans-serif', textAlign: 'center' }}>Auction Listings</h2>
-  <ul className="resultsList">
+  <div className="horizontalScroll">
     {auctionResults.map((item) => (
-      <li key={item.itemId}>
+      <div key={item.itemId} className="cardItem">
         <strong>{item.title}</strong>
         <p>Current Bid: <span style={{ color: 'limegreen', fontWeight: 'bold' }}>${item.currentBidPrice?.value} {item.currentBidPrice?.currency}</span></p>
         <p>Bids: {item.bidCount}</p>
@@ -236,18 +275,18 @@ useEffect(() => {
         >
           View on eBay
         </a>
-      </li>
+      </div>
     ))}
     {auctionResults.length === 0 && <p>No auction results found.</p>}
-  </ul>
+  </div>
 </div>
 
 {/* Fixed Price Listings */}
-<div className="hello">
+<div className="">
   <h2 className='subHead' style={{ fontFamily: '"Luckiest Guy", sans-serif', textAlign: 'center' }}>Fixed Price Listings</h2>
-  <ul className="resultsList">
+  <div className="horizontalScroll">
     {fixedPriceResults.map((item) => (
-      <li key={item.itemId}>
+      <div key={item.itemId} className="cardItem">
         <strong>{item.title}</strong>
         <p><span style={{ color: 'limegreen', fontWeight: 'bold' }}>${item.price?.value} {item.currentBidPrice?.currency}</span></p>
         <img width={150} src={item.image.imageUrl} alt="Fixed price item" />
@@ -259,10 +298,10 @@ useEffect(() => {
         >
           View on eBay
         </a>
-      </li>
+      </div>
     ))}
     {fixedPriceResults.length === 0 && <p>No fixed price results found.</p>}
-  </ul>
+  </div>
 </div>
       </>)}
     </div>
