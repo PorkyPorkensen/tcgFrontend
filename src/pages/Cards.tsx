@@ -2,28 +2,41 @@ import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { db, auth } from "../firebase";
 import { collection, doc, setDoc, addDoc } from "firebase/firestore";
 import { getAuth, signInAnonymously } from "firebase/auth";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, JSX } from "react";
 
-export default function Cards() {
-  const [query, setQuery] = useState("");
-  const [cards, setCards] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [selectedConditions, setSelectedConditions] = useState({});
-  const [hasSearched, setHasSearched] = useState(false);
+
+type CardType = {
+  id: string;
+  name: string;
+  set: { name: string; series: string };
+  number: string;
+  images: { small: string; large: string };
+}
+
+type CardApiResponse = {
+  data: CardType[];
+}
+
+export default function Cards(): JSX.Element {
+  const [query, setQuery] = useState<string>("");
+  const [cards, setCards] = useState<CardType[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string|null>(null);
+  const [selectedConditions, setSelectedConditions] = useState<Record<string, string>>({});
+  const [hasSearched, setHasSearched] = useState<boolean>(false);
 
   useEffect(() => {
     console.log("Error changed:", error);
   }, [error]);
 
-  const conditions = [
+  const conditions:string[] = [
     "NM", "LP", "MP", "HP", "DMG", "POOR",
     "GRADED 10", "GRADED 9", "GRADED 8", "GRADED 7",
     "GRADED 6", "GRADED 5", "GRADED 4", "GRADED 3",
     "GRADED 2", "GRADED 1"
   ];
 
-  const handleSearch = async () => {
+  const handleSearch = async ():Promise<void> => {
     if (!query.trim()) return;
 
     setCards([]); // Clear old results immediately
@@ -53,7 +66,7 @@ export default function Cards() {
         return;
       }
 
-      const data = await res.json();
+      const data:CardApiResponse = await res.json();
 
       if (!data.data || data.data.length === 0) {
         setError("noResults");
@@ -61,7 +74,7 @@ export default function Cards() {
       } else {
         setCards(data.data);
       }
-    } catch (err) {
+    } catch (err:unknown) {
       console.error("Caught error:", err);
 
       // Assume timeout if fetch completely fails (network issues, 504 etc.)
@@ -72,7 +85,7 @@ export default function Cards() {
     }
   };
 
-  const addToCollection = async (card, condition = "NM") => {
+  const addToCollection = async (card:CardType, condition = "NM"):Promise<void> => {
     try {
       const user = auth.currentUser;
 

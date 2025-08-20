@@ -2,20 +2,56 @@ import { useState, useEffect } from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import cnf from "../assets/cnf.png"
 
+type SoldCardResult = {
+  itemId: string;
+  title: string;
+  image: string;
+  wasOfferAccepted?: boolean;
+  salePrice?: string;
+  originalPrice?: string;
+  gradeService?: string;
+  gradeScore?: string;
+  date?: string;
+  link: string;
+}
+
+type EbaySearchResponse<T> = {
+  itemSummaries?: T[];
+  total?: number;
+  href?: string;
+  next?: string;
+};
+
+type AuctionCardResult = {
+  itemId: string;
+  title: string;
+  image: {imageUrl:string;}
+  currentBidPrice?: { value: string; currency: string };
+  bidCount?: number;
+  itemWebUrl: string;
+}
+type FixedPriceCardResult = {
+  itemId: string;
+  title: string;
+  image: {imageUrl:string;}
+  price?: { value: string; currency: string };
+  currentBidPrice?: { value: string; currency: string };
+  itemWebUrl: string;
+}
 export default function SearchCards() {
-  const [query, setQuery] = useState("");
-  const [auctionResults, setAuctionResults] = useState([]);
-  const [fixedPriceResults, setFixedPriceResults] = useState([]);
-  const [error, setError] = useState(null);
-  const [hasSearched, setHasSearched] = useState(false);
-  const [tcgbookmarks, settcgBookmarks] = useState([]);
-  const [bookmarksInitialized, setBookmarksInitialized] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [soldResults, setSoldResults] = useState([]);
+  const [query, setQuery] = useState<string>("");
+  const [auctionResults, setAuctionResults] = useState<AuctionCardResult[]>([]);
+  const [fixedPriceResults, setFixedPriceResults] = useState<FixedPriceCardResult[]>([]);
+  const [error, setError] = useState<string|null>(null);
+  const [hasSearched, setHasSearched] = useState<boolean>(false);
+  const [tcgbookmarks, settcgBookmarks] = useState<string[]>([]);
+  const [bookmarksInitialized, setBookmarksInitialized] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [soldResults, setSoldResults] = useState<SoldCardResult[]>([]);
   const EPN_CAMPAIGN_ID = "5339116843";
 
 
-const appendEPNTracking = (url) => {
+const appendEPNTracking = (url:string) => {
   try {
     const u = new URL(url);
     u.searchParams.set("campid", EPN_CAMPAIGN_ID);
@@ -27,7 +63,7 @@ const appendEPNTracking = (url) => {
 };
 
 
-  const fetchCards = async (searchTerm) => {
+  const fetchCards = async (searchTerm:string):Promise<void> => {
     try {
       const encodedQuery = encodeURIComponent(searchTerm || query);
       setLoading(true);
@@ -35,19 +71,19 @@ const appendEPNTracking = (url) => {
       const soldRes = await fetch(
         `https://tcgbackend.onrender.com/api/sold?term=${encodedQuery}`
       );
-      const soldData = await soldRes.json();
+      const soldData:SoldCardResult[] = await soldRes.json();
       // Fetch AUCTION items
       const auctionRes = await fetch(
         `https://tcgbackend.onrender.com/api/search?q=${encodedQuery}&filter=${encodeURIComponent("buyingOptions:{AUCTION}")}`
       );
-      const auctionData = await auctionRes.json();
+      const auctionData:EbaySearchResponse<AuctionCardResult> = await auctionRes.json();
       console.log(auctionData)
 
       // Fetch FIXED_PRICE items
       const fixedRes = await fetch(
         `https://tcgbackend.onrender.com/api/search?q=${encodedQuery}&filter=${encodeURIComponent("buyingOptions:{FIXED_PRICE}")}`
       );
-      const fixedData = await fixedRes.json();
+      const fixedData:EbaySearchResponse<FixedPriceCardResult> = await fixedRes.json();
       
       setSoldResults(soldData || []);
       setAuctionResults(auctionData.itemSummaries || []);
@@ -66,7 +102,7 @@ const appendEPNTracking = (url) => {
     setLoading(false);
   };
 
-  const handleClearResults = () => {
+  const handleClearResults = ():void => {
   setQuery("");
   setSoldResults([]);
   setAuctionResults([]);
@@ -101,7 +137,8 @@ useEffect(() => {
 
 
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("tcgbookmarks"));
+    const storedStr = localStorage.getItem("tcgbookmarks");
+    const stored = storedStr ? JSON.parse(storedStr) : null;
     if (stored) settcgBookmarks(stored);
     setBookmarksInitialized(true);
   }, []);
@@ -112,19 +149,19 @@ useEffect(() => {
   }
 }, [tcgbookmarks, bookmarksInitialized]);
 
-    const handleBookmark = () => {
+    const handleBookmark = ():void => {
     const trimmed = query.trim();
     if (!trimmed || tcgbookmarks.includes(trimmed)) return;
     settcgBookmarks(prev => [...prev, trimmed]);
     setQuery("");
   };
 
-  const handleBookmarkClick = (term) => {
+  const handleBookmarkClick = (term:string):void => {
     setQuery(term);
     fetchCards(term);
   };
 
-  const handleRemoveBookmark = (termToRemove) => {
+  const handleRemoveBookmark = (termToRemove:string):void => {
     const updated = tcgbookmarks.filter(term => term !== termToRemove);
     settcgBookmarks(updated);
   };

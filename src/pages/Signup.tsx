@@ -4,12 +4,12 @@ import { auth } from '../firebase';
 import { useNavigate } from 'react-router-dom';
 
 export default function AuthForm() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [isSignUp, setIsSignUp] = useState<boolean>(false);
   const navigate = useNavigate();
 
-  const handleAuth = async (e) => {
+  const handleAuth = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       if (isSignUp) {

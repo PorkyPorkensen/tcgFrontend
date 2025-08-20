@@ -1,19 +1,35 @@
 import React, { useEffect, useState } from "react";
 import { auth, db } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import type { User } from "firebase/auth";
 import { collection, query, where, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
+
+ type CardType = {
+  id: string;
+  cardName: string;
+  setName: string;
+  cardNumber: string;
+  condition: string;
+  imageUrl: string;
+  salePrice: string;
+}
+
+type AveragePrices = {
+  [cardId: string]: number | "N/A" | "Error";
+};
+
 export default function MyCards() {
   // 🔵 State
-  const [user, setUser] = useState(null);
-  const [cards, setCards] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [averagePrices, setAveragePrices] = useState(() => {
+  const [user, setUser] = useState<User | null>(null);
+  const [cards, setCards] = useState<CardType[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [averagePrices, setAveragePrices] = useState<AveragePrices>(():AveragePrices => {
     const saved = localStorage.getItem("averagePrices");
-    return saved ? JSON.parse(saved) : {};
+      return saved ? JSON.parse(saved) as AveragePrices : {};
   });
-  const [totalValue, setTotalValue] = useState(() => {
+  const [totalValue, setTotalValue] = useState<string>(():string => {
     return localStorage.getItem("totalValue") || "0.00";
   });
 
@@ -23,18 +39,20 @@ export default function MyCards() {
       if (firebaseUser) {
         setUser(firebaseUser);
 
+        type FirestoreCard = Omit<CardType, "id"> & { userId: string };
+
         const q = query(
           collection(db, "collections"),
           where("userId", "==", firebaseUser.uid)
         );
 
         const snapshot = await getDocs(q);
-        const cardData = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+        const cardData: CardType[] = snapshot.docs.map((doc) => {
+          const data = doc.data() as FirestoreCard;
+          return { id: doc.id, ...data };
+        });
 
-        setCards(cardData);
+        setCards(cardData as CardType[]);
       } else {
         setUser(null);
         setCards([]);
@@ -47,20 +65,22 @@ export default function MyCards() {
   }, []);
 
   // 💰 Fetch average sold price from backend
-  const fetchSoldAverage = async (term, cardId, delay = 500) => {
+  const fetchSoldAverage = async (term:string, cardId:string, delay = 500) => {
     await new Promise((res) => setTimeout(res, delay));
 
     try {
       const encodedTerm = encodeURIComponent(term);
       const response = await fetch(`https://tcgbackend.onrender.com/api/sold?term=${encodedTerm}`);
-      const data = await response.json();
+      const data:CardType[] = await response.json();
 
       if (data?.length > 0) {
         const prices = data
-          .map((item) => parseFloat(item.salePrice.replace(/[^0-9.-]+/g, "")))
-          .filter((price) => !isNaN(price));
+          .map((item:CardType) => parseFloat(item.salePrice.replace(/[^0-9.-]+/g, "")))
+          .filter((price:number) => !isNaN(price));
 
-        const avg = (prices.reduce((sum, val) => sum + val, 0) / prices.length).toFixed(2);
+        const avg = Number(
+          (prices.reduce((sum:number, val:number) => sum + val, 0) / prices.length).toFixed(2)
+        );
 
         setAveragePrices((prev) => ({ ...prev, [cardId]: avg }));
       } else {
@@ -73,16 +93,16 @@ export default function MyCards() {
   };
 
   // 🧮 Update totalValue and cache in localStorage when prices change
-  useEffect(() => {
-    const values = Object.values(averagePrices)
-      .map((price) => parseFloat(price))
-      .filter((num) => !isNaN(num));
+    useEffect(() => {
+      const values = Object.values(averagePrices).filter(
+        (val): val is number => typeof val === "number"
+      );
 
-    const total = values.reduce((sum, val) => sum + val, 0).toFixed(2);
-    setTotalValue(total);
-    localStorage.setItem("totalValue", total);
-    localStorage.setItem("averagePrices", JSON.stringify(averagePrices));
-  }, [averagePrices]);
+      const total = values.reduce((sum, val) => sum + val, 0).toFixed(2);
+      setTotalValue(total);
+      localStorage.setItem("totalValue", total);
+      localStorage.setItem("averagePrices", JSON.stringify(averagePrices));
+    }, [averagePrices]);
 
   // ⚡ Initial fetch for sold prices (only if not cached)
   useEffect(() => {
@@ -101,7 +121,7 @@ export default function MyCards() {
   }, [cards]);
 
   // 🗑️ Delete a card from Firestore and local state
-  const deleteCard = async (cardId) => {
+  const deleteCard = async (cardId:string):Promise<void> => {
     const confirmDelete = window.confirm("Are you sure you want to remove this card?");
     if (!confirmDelete) return;
 
@@ -114,13 +134,17 @@ export default function MyCards() {
         const { [cardId]: _, ...rest } = prev;
         return rest;
       });
-    } catch (error) {
-      alert("Error deleting card: " + error.message);
+        } catch (error: unknown) {
+      if (error instanceof Error) {
+        alert("Error deleting card: " + error.message);
+      } else {
+        alert("Unknown error deleting card");
+      }
     }
   };
 
   // 🔁 Manual recalculation trigger
-  const handleRecalculate = () => {
+  const handleRecalculate = ():void => {
     let delay = 0;
 
     cards.forEach((card) => {
@@ -198,10 +222,10 @@ export default function MyCards() {
               <p>Card #: {card.cardNumber}</p>
               <p>
                 Avg Sold Price:{" "}
-                {averagePrices[card.id]
-                  ? isNaN(averagePrices[card.id])
-                    ? averagePrices[card.id]
-                    : `$${averagePrices[card.id]}`
+                {averagePrices[card.id] !== undefined
+                  ? typeof averagePrices[card.id] === "number"
+                    ? `$${averagePrices[card.id]}`
+                    : averagePrices[card.id] // "N/A" or "Error"
                   : "Calculating..."}
               </p>
               <button
