@@ -1,6 +1,6 @@
-import React from "react";
+import React, {JSX} from "react";
 
-export default function FAQ() {
+export default function FAQ(): JSX.Element {
   return (
     <div className="howToUse">
       <h1 style={{ textAlign: "center" }}>Frequently Asked Questions</h1>

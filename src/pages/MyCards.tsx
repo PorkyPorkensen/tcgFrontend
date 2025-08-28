@@ -13,8 +13,12 @@ import { DotLottieReact } from "@lottiefiles/dotlottie-react";
   cardNumber: string;
   condition: string;
   imageUrl: string;
+<<<<<<< HEAD
   salePrice?: string;
   price?: string;
+=======
+  salePrice: string;
+>>>>>>> 7f4f853a6ca751bc5e2ee841b34d7f069dfcbb01
 }
 
 type AveragePrices = {
@@ -76,12 +80,17 @@ export default function MyCards() {
 
       if (data?.length > 0) {
         const prices = data
+<<<<<<< HEAD
   .map((item: CardType) => {
     const priceStr = item.salePrice || item.price;
     if (!priceStr) return NaN;
     return parseFloat(priceStr.replace(/[^0-9.-]+/g, ""));
   })
   .filter((price: number) => !isNaN(price));
+=======
+          .map((item:CardType) => parseFloat(item.salePrice.replace(/[^0-9.-]+/g, "")))
+          .filter((price:number) => !isNaN(price));
+>>>>>>> 7f4f853a6ca751bc5e2ee841b34d7f069dfcbb01
 
         const avg = Number(
           (prices.reduce((sum:number, val:number) => sum + val, 0) / prices.length).toFixed(2)
