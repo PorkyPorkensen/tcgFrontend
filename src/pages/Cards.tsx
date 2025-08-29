@@ -99,7 +99,7 @@ export default function Cards(): JSX.Element {
         condition,
       };
 
-      const response = await fetch("https://tcgbackend.onrender.com/api/cards/add", {
+      const response = await fetch("https://tcgbackend-951874125609.us-east4.run.app/api/cards/add", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

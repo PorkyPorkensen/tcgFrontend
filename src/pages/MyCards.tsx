@@ -71,7 +71,7 @@ export default function MyCards() {
 
     try {
       const encodedTerm = encodeURIComponent(term);
-      const response = await fetch(`https://tcgbackend.onrender.com/api/sold?term=${encodedTerm}`);
+      const response = await fetch(`https://tcgbackend-951874125609.us-east4.run.app/api/sold?term=${encodedTerm}`);
       const data:CardType[] = await response.json();
 
       if (data?.length > 0) {

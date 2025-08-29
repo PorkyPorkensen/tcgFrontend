@@ -69,7 +69,7 @@ export default function SearchCards() {
 
       // Fetch SOLD items
       const soldRes = await fetch(
-        `https://tcgbackend.onrender.com/api/sold?term=${encodedQuery}`
+        `https://tcgbackend-951874125609.us-east4.run.app/api/sold?term=${encodedQuery}`
       );
       const soldData = await soldRes.json();
       console.log("SOLD API DATA:", soldData);
@@ -81,7 +81,7 @@ export default function SearchCards() {
 
       // Fetch AUCTION items
       const auctionRes = await fetch(
-        `https://tcgbackend.onrender.com/api/search?q=${encodedQuery}&filter=${encodeURIComponent(
+        `https://tcgbackend-951874125609.us-east4.run.app/api/search?q=${encodedQuery}&filter=${encodeURIComponent(
           "buyingOptions:{AUCTION}"
         )}`
       );
@@ -89,7 +89,7 @@ export default function SearchCards() {
 
       // Fetch FIXED_PRICE items
       const fixedRes = await fetch(
-        `https://tcgbackend.onrender.com/api/search?q=${encodedQuery}&filter=${encodeURIComponent(
+        `https://tcgbackend-951874125609.us-east4.run.app/api/search?q=${encodedQuery}&filter=${encodeURIComponent(
           "buyingOptions:{FIXED_PRICE}"
         )}`
       );
