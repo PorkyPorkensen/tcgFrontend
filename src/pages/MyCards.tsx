@@ -108,7 +108,7 @@ export default function MyCards() {
       cards.forEach((card) => {
         const condition = card.condition?.toUpperCase?.();
         const conditionLabel = condition === "GRADED" ? "PSA" : condition;
-        const searchTerm = `${card.cardName} ${card.cardNumber} ${conditionLabel}`;
+        const searchTerm = `${card.cardName} ${card.setName} ${card.cardNumber} ${conditionLabel}`;
 
         delay += 500;
         fetchSoldAverage(searchTerm, card.id, delay);
@@ -146,7 +146,7 @@ export default function MyCards() {
     cards.forEach((card) => {
       const condition = card.condition?.toUpperCase?.();
       const conditionLabel = condition === "GRADED" ? "PSA" : condition;
-      const searchTerm = `${card.cardName} ${card.cardNumber} ${conditionLabel}`;
+      const searchTerm = `${card.cardName} ${card.setName} ${card.cardNumber} ${conditionLabel}`;
 
       delay += 500;
       fetchSoldAverage(searchTerm, card.id, delay);
