@@ -10,7 +10,7 @@ export default function FAQ(): JSX.Element {
       </p>
       <h2>Whats taking so long?</h2>
       <p>
-        Because as of this moment, my server is being hosted on a free tier, it can take up to fifty seconds to load everything if inactive. I am working on getting a paid server soon. This on top of the fact
+        In short, my server is being hosted on a free tier. This on top of the fact
         that the PokemonTCGApi is also a free API (shout-out to Andrew), it can be slow at times. I am working on optimizing the code to make it faster.
       </p>
       <h2>How do I search for card sales?</h2>
@@ -26,7 +26,7 @@ export default function FAQ(): JSX.Element {
       <h2>Why isn't my Pokemon card showing up?</h2>
       <p>
         This could be due to several reasons: The most common is that the API I am using is the PokemonTCG API, which will return almost all cards,
-        but not every variety of a card. For example, Reverse Holos are not in the database. 
+        but not every variety of a card. For example, Reverse Holos are not <strong>yet</strong> in the database. 
       </p>
       <h2>Why does each of my cards "Avg Sold Price" load individually?</h2>
       <p>

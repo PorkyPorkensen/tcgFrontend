@@ -66,36 +66,27 @@ export default function MyCards() {
   }, []);
 
   // 💰 Fetch average sold price from backend
-  const fetchSoldAverage = async (term:string, cardId:string, delay = 500) => {
-    await new Promise((res) => setTimeout(res, delay));
+ const fetchSoldAverage = async (term: string, cardId: string, delay = 500) => {
+  await new Promise((res) => setTimeout(res, delay));
 
-    try {
-      const encodedTerm = encodeURIComponent(term);
-      const response = await fetch(`https://tcgbackend-951874125609.us-east4.run.app/api/sold?term=${encodedTerm}`);
-      const data:CardType[] = await response.json();
+  try {
+    const encodedTerm = encodeURIComponent(term);
+    const response = await fetch(`https://tcgbackend-951874125609.us-east4.run.app/api/sold-prices?term=${encodedTerm}`);
+    const data: number[] = await response.json();
 
-      if (data?.length > 0) {
-        const prices = data
-  .map((item: CardType) => {
-    const priceStr = item.salePrice || item.price;
-    if (!priceStr) return NaN;
-    return parseFloat(priceStr.replace(/[^0-9.-]+/g, ""));
-  })
-  .filter((price: number) => !isNaN(price));
-
-        const avg = Number(
-          (prices.reduce((sum:number, val:number) => sum + val, 0) / prices.length).toFixed(2)
-        );
-
-        setAveragePrices((prev) => ({ ...prev, [cardId]: avg }));
-      } else {
-        setAveragePrices((prev) => ({ ...prev, [cardId]: "N/A" }));
-      }
-    } catch (error) {
-      console.error(`Error fetching average price for ${term}:`, error);
-      setAveragePrices((prev) => ({ ...prev, [cardId]: "Error" }));
+    if (Array.isArray(data) && data.length > 0) {
+      const avg = Number(
+        (data.reduce((sum, val) => sum + val, 0) / data.length).toFixed(2)
+      );
+      setAveragePrices((prev) => ({ ...prev, [cardId]: avg }));
+    } else {
+      setAveragePrices((prev) => ({ ...prev, [cardId]: "N/A" }));
     }
-  };
+  } catch (error) {
+    console.error(`Error fetching average price for ${term}:`, error);
+    setAveragePrices((prev) => ({ ...prev, [cardId]: "Error" }));
+  }
+};
 
   // 🧮 Update totalValue and cache in localStorage when prices change
     useEffect(() => {
