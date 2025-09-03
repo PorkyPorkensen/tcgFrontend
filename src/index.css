@@ -31,9 +31,11 @@ a:hover {
 
 .pokeBall {
   width: 115px;
-  margin-left: -10px;
+  margin-left: -14px;
+  margin-top: 8px;
 }
 .header {
+  font-size: 4em;
   margin-left: 15px;
 }
 
@@ -451,7 +453,7 @@ button:focus-visible {
   border-radius: 6px;
   cursor: pointer;
   box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.6);
-  margin-top: 10px;
+  margin-top: 20px;
 }
 
 .recalculateBtn:hover, .recalculateBtn:focus, .recalculateBtn:active {

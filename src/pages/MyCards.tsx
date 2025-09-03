@@ -33,6 +33,7 @@ export default function MyCards() {
   const [totalValue, setTotalValue] = useState<string>(():string => {
     return localStorage.getItem("totalValue") || "0.00";
   });
+  const [lua, setLua] = useState<string>("");
 
   // 🔄 Handle user auth state + fetch user's cards
   useEffect(() => {
@@ -62,13 +63,16 @@ export default function MyCards() {
       setLoading(false);
     });
 
+
+
+
     return () => unsubscribe();
   }, []);
 
   // 💰 Fetch average sold price from backend
  const fetchSoldAverage = async (term: string, cardId: string, delay = 500) => {
   await new Promise((res) => setTimeout(res, delay));
-
+  setLoading(true);
   try {
     const encodedTerm = encodeURIComponent(term);
     const response = await fetch(`https://tcgbackend-951874125609.us-east4.run.app/api/sold-prices?term=${encodedTerm}`);
@@ -86,19 +90,32 @@ export default function MyCards() {
     console.error(`Error fetching average price for ${term}:`, error);
     setAveragePrices((prev) => ({ ...prev, [cardId]: "Error" }));
   }
+  setLoading(false);
+  // Set last updated at (lua) as "MM/DD/YY HH:mm"
+  const now = new Date();
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  const luaString = `${pad(now.getMonth() + 1)}/${pad(now.getDate())}/${now.getFullYear().toString().slice(-2)} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  setLua(luaString);
+  localStorage.setItem("lua", luaString);
 };
 
   // 🧮 Update totalValue and cache in localStorage when prices change
     useEffect(() => {
-      const values = Object.values(averagePrices).filter(
-        (val): val is number => typeof val === "number"
-      );
+  const values = Object.values(averagePrices).filter(
+    (val): val is number => typeof val === "number"
+  );
 
-      const total = values.reduce((sum, val) => sum + val, 0).toFixed(2);
-      setTotalValue(total);
-      localStorage.setItem("totalValue", total);
-      localStorage.setItem("averagePrices", JSON.stringify(averagePrices));
-    }, [averagePrices]);
+    const total = values.reduce((sum, val) => sum + val, 0).toFixed(2);
+    setTotalValue(total);
+    localStorage.setItem("totalValue", total);
+    localStorage.setItem("averagePrices", JSON.stringify(averagePrices));
+  }, [averagePrices]);
+
+  // 🕒 Load lua from localStorage on mount
+  useEffect(() => {
+    const savedLua = localStorage.getItem("lua");
+    if (savedLua) setLua(savedLua);
+  }, []);
 
   // ⚡ Initial fetch for sold prices (only if not cached)
   useEffect(() => {
@@ -152,7 +169,23 @@ export default function MyCards() {
       fetchSoldAverage(searchTerm, card.id, delay);
     });
   };
+  // Automatically fetch price for cards missing a price
+  useEffect(() => {
+    if (cards.length === 0) return;
 
+    let delay = 0;
+    cards.forEach((card) => {
+      // If this card does not have a price in averagePrices, fetch it
+      if (averagePrices[card.id] === undefined) {
+        const condition = card.condition?.toUpperCase?.();
+        const conditionLabel = condition === "GRADED" ? "PSA" : condition;
+        const searchTerm = `${card.cardName} ${card.setName} ${card.cardNumber} ${conditionLabel}`;
+        delay += 500;
+        fetchSoldAverage(searchTerm, card.id, delay);
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cards]);
   // ⏳ Loading state
   if (loading) {
     return (
@@ -186,20 +219,23 @@ export default function MyCards() {
     >
       <h1 style={{ fontSize: "3em", textAlign: "center" }}>My Collection</h1>
       
-      <div style={{ width: '100%', display: "flex", flexDirection: "column", alignItems: "center", margin: "20px auto", marginBottom: "40px" }}>
-        <h1 style={{ fontSize: "1.8em", textAlign: "center" }}>
-          Total Estimated Value: <span style={{ color: "#ffcc00" }}>${totalValue}</span>
-        </h1>
-        <p style={{maxWidth: '50%', fontSize: "0.8em", textAlign: 'center'}}><strong>NOTE:</strong> This number is an estimate. It is calculated by searching the card name, card number, and condition together and taking the results
-      of that search on eBay and averaging out the most recent 8 sales. This may lead to innacurate pricing if your card is not commonly traded.</p>
-
-        <button
-          onClick={handleRecalculate}
-          className="recalculateBtn"
-        >
-          🔄 Recalculate Card Values
-        </button>
-      </div>
+    <div style={{ width: '100%', display: "flex", flexDirection: "column", alignItems: "center", margin: "20px auto", marginBottom: "40px" }}>
+      <h1 style={{ fontSize: "1.8em", textAlign: "center" }}>
+        Total Estimated Value: <span style={{ color: "#ffcc00" }}>${totalValue}</span>
+      </h1>
+      {lua && (
+        <p style={{ fontSize: "0.9em", color: "#ffcc00", margin: "-1em 0 0.5em 0" }}>
+          Last updated at: {lua}
+        </p>
+      )}
+      
+      <button
+        onClick={handleRecalculate}
+        className="recalculateBtn"
+      >
+        🔄 Recalculate Card Values
+      </button>
+    </div>
 
       {cards.length === 0 ? (
         <p style={{ textAlign: "center" }}>You haven’t saved any cards yet.</p>
@@ -234,6 +270,8 @@ export default function MyCards() {
           ))}
         </div>
       )}
+      <p style={{maxWidth: '50%', fontSize: "0.8em", textAlign: 'center', marginTop: "4em"}}><strong>NOTE:</strong> This number is an estimate. It is calculated by searching the card name, card number, and condition together and taking the results
+    of that search on eBay and averaging out the most recent 8 sales. This may lead to innacurate pricing if your card is not commonly traded.</p>
     </div>
   );
 }

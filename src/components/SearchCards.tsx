@@ -212,7 +212,6 @@ export default function SearchCards() {
 
       {tcgbookmarks.length > 0 && (
         <div style={{ marginTop: "1em", textAlign: "center" }}>
-          <h3 className="subHead">Bookmarked Searches</h3>
           <div
             style={{
               display: "flex",
