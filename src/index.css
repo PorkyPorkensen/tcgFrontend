@@ -31,11 +31,9 @@ a:hover {
 
 .pokeBall {
   width: 115px;
-  margin-left: -14px;
-  margin-top: 8px;
+  margin-left: -10px;
 }
 .header {
-  font-size: 4em;
   margin-left: 15px;
 }
 
@@ -267,7 +265,7 @@ button:focus-visible {
   margin: auto;
 }
 .linkDiv {
-  width: 90%;
+  width: 85%;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -378,10 +376,13 @@ button:focus-visible {
   background-color: #e96464;
   color: #222222;
   border: none;
-  padding: 0.5em 1em;
+  padding: 1.5em 1em;
   border-radius: 4px;
   cursor: pointer;
   font-weight: bold;
+  align-items: center;
+  justify-content: center;
+  display: flex;
 
 }
 .logOutBtn {
@@ -478,8 +479,12 @@ button:focus-visible {
   transition: background-color 0.3s ease;
 }
 @media (min-width: 600px){
+  .bookmark1, .bookmark2 {
+  padding: 0.5em 1em;
+}
+
   .linkDiv {
-    width: 90%;;
+    width: 90%;
   }
   .resultsList {
     grid-template-columns: repeat(2, minmax(300px, 1fr));
@@ -496,7 +501,15 @@ button:focus-visible {
 
 @media (min-width: 1000px){
   
-
+.pokeBall {
+  width: 115px;
+  margin-left: -14px;
+  margin-top: 8px;
+}
+.header {
+  font-size: 4em;
+  margin-left: 15px;
+}
   .linkDiv {
     min-width: 860px;
   }

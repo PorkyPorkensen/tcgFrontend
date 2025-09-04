@@ -72,7 +72,6 @@ export default function MyCards() {
   // 💰 Fetch average sold price from backend
  const fetchSoldAverage = async (term: string, cardId: string, delay = 500) => {
   await new Promise((res) => setTimeout(res, delay));
-  setLoading(true);
   try {
     const encodedTerm = encodeURIComponent(term);
     const response = await fetch(`https://tcgbackend-951874125609.us-east4.run.app/api/sold-prices?term=${encodedTerm}`);
@@ -90,7 +89,6 @@ export default function MyCards() {
     console.error(`Error fetching average price for ${term}:`, error);
     setAveragePrices((prev) => ({ ...prev, [cardId]: "Error" }));
   }
-  setLoading(false);
   // Set last updated at (lua) as "MM/DD/YY HH:mm"
   const now = new Date();
   const pad = (n: number) => n.toString().padStart(2, "0");
@@ -159,7 +157,7 @@ export default function MyCards() {
   // 🔁 Manual recalculation trigger
   const handleRecalculate = ():void => {
     let delay = 0;
-
+    setLoading(true);
     cards.forEach((card) => {
       const condition = card.condition?.toUpperCase?.();
       const conditionLabel = condition === "GRADED" ? "PSA" : condition;
@@ -168,6 +166,7 @@ export default function MyCards() {
       delay += 500;
       fetchSoldAverage(searchTerm, card.id, delay);
     });
+    setLoading(false);
   };
   // Automatically fetch price for cards missing a price
   useEffect(() => {
@@ -270,8 +269,8 @@ export default function MyCards() {
           ))}
         </div>
       )}
-      <p style={{maxWidth: '50%', fontSize: "0.8em", textAlign: 'center', marginTop: "4em"}}><strong>NOTE:</strong> This number is an estimate. It is calculated by searching the card name, card number, and condition together and taking the results
-    of that search on eBay and averaging out the most recent 8 sales. This may lead to innacurate pricing if your card is not commonly traded.</p>
+      <p style={{maxWidth: '50%', fontSize: "0.8em", textAlign: 'center', marginTop: "4em"}}><strong>NOTE:</strong> These numbers are estimates. They are calculated by searching the card name, card number, set and condition together and taking the results
+    of that search on eBay and averaging out the most recent 8 sales. This may lead to inaccurate pricing if your card is not commonly traded.</p>
     </div>
   );
 }
