@@ -254,7 +254,7 @@ export default function SearchCards() {
             autoplay
             className="pikachuLoading"
           />
-          <p style={{ textAlign: "center" }}>Loading... This can take up to 60s</p>
+          <p style={{ textAlign: "center" }}>Loading... This can take up to 30s</p>
         </div>
       )}
 

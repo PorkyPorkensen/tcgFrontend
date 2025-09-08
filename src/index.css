@@ -265,7 +265,7 @@ button:focus-visible {
   margin: auto;
 }
 .linkDiv {
-  width: 85%;
+  width: 80%;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -471,6 +471,7 @@ button:focus-visible {
   border-radius: 4px;
   cursor: pointer;
   box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.76);
+  margin-bottom: 0.5em;
 }
 
 .deleteCardBtn:hover, .deleteCardBtn:focus, .deleteCardBtn:active {

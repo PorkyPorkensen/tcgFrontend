@@ -5,8 +5,7 @@ import type { User } from "firebase/auth";
 import { collection, query, where, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
-
- type CardType = {
+type CardType = {
   id: string;
   cardName: string;
   setName: string;
@@ -15,7 +14,7 @@ import { DotLottieReact } from "@lottiefiles/dotlottie-react";
   imageUrl: string;
   salePrice?: string;
   price?: string;
-}
+};
 
 type AveragePrices = {
   [cardId: string]: number | "N/A" | "Error";
@@ -26,14 +25,16 @@ export default function MyCards() {
   const [user, setUser] = useState<User | null>(null);
   const [cards, setCards] = useState<CardType[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [averagePrices, setAveragePrices] = useState<AveragePrices>(():AveragePrices => {
+  const [averagePrices, setAveragePrices] = useState<AveragePrices>(() => {
     const saved = localStorage.getItem("averagePrices");
-      return saved ? JSON.parse(saved) as AveragePrices : {};
+    return saved ? (JSON.parse(saved) as AveragePrices) : {};
   });
-  const [totalValue, setTotalValue] = useState<string>(():string => {
+  const [totalValue, setTotalValue] = useState<string>(() => {
     return localStorage.getItem("totalValue") || "0.00";
   });
   const [lua, setLua] = useState<string>("");
+  const [calculatingCount, setCalculatingCount] = useState(0);
+  const [isCalculating, setIsCalculating] = useState(false);
 
   // 🔄 Handle user auth state + fetch user's cards
   useEffect(() => {
@@ -63,45 +64,61 @@ export default function MyCards() {
       setLoading(false);
     });
 
-
-
-
     return () => unsubscribe();
   }, []);
 
   // 💰 Fetch average sold price from backend
- const fetchSoldAverage = async (term: string, cardId: string, delay = 500) => {
-  await new Promise((res) => setTimeout(res, delay));
-  try {
-    const encodedTerm = encodeURIComponent(term);
-    const response = await fetch(`https://tcgbackend-951874125609.us-east4.run.app/api/sold-prices?term=${encodedTerm}`);
-    const data: number[] = await response.json();
-
-    if (Array.isArray(data) && data.length > 0) {
-      const avg = Number(
-        (data.reduce((sum, val) => sum + val, 0) / data.length).toFixed(2)
+  const fetchSoldAverage = async (
+    term: string,
+    cardId: string,
+    delay = 500,
+    toCalculate?: number
+  ) => {
+    await new Promise((res) => setTimeout(res, delay));
+    try {
+      const encodedTerm = encodeURIComponent(term);
+      const response = await fetch(
+        `https://tcgbackend-951874125609.us-east4.run.app/api/sold-prices?term=${encodedTerm}`
       );
-      setAveragePrices((prev) => ({ ...prev, [cardId]: avg }));
-    } else {
-      setAveragePrices((prev) => ({ ...prev, [cardId]: "N/A" }));
+      const data: number[] = await response.json();
+
+      if (Array.isArray(data) && data.length > 0) {
+        const avg = Number(
+          (data.reduce((sum, val) => sum + val, 0) / data.length).toFixed(2)
+        );
+        setAveragePrices((prev) => ({ ...prev, [cardId]: avg }));
+      } else {
+        setAveragePrices((prev) => ({ ...prev, [cardId]: "N/A" }));
+      }
+    } catch (error) {
+      console.error(`Error fetching average price for ${term}:`, error);
+      setAveragePrices((prev) => ({ ...prev, [cardId]: "Error" }));
     }
-  } catch (error) {
-    console.error(`Error fetching average price for ${term}:`, error);
-    setAveragePrices((prev) => ({ ...prev, [cardId]: "Error" }));
-  }
-  // Set last updated at (lua) as "MM/DD/YY HH:mm"
-  const now = new Date();
-  const pad = (n: number) => n.toString().padStart(2, "0");
-  const luaString = `${pad(now.getMonth() + 1)}/${pad(now.getDate())}/${now.getFullYear().toString().slice(-2)} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
-  setLua(luaString);
-  localStorage.setItem("lua", luaString);
-};
+    // Set last updated at (lua) as "MM/DD/YY HH:mm"
+    const now = new Date();
+    const pad = (n: number) => n.toString().padStart(2, "0");
+    const luaString = `${pad(now.getMonth() + 1)}/${pad(now.getDate())}/${now
+      .getFullYear()
+      .toString()
+      .slice(-2)} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    setLua(luaString);
+    localStorage.setItem("lua", luaString);
+
+    // Increment calculating count and check if done
+    setCalculatingCount((prev) => {
+      const next = prev + 1;
+      if (toCalculate && next >= toCalculate) {
+        setIsCalculating(false);
+      }
+      return next;
+    });
+  };
 
   // 🧮 Update totalValue and cache in localStorage when prices change
-    useEffect(() => {
-  const values = Object.values(averagePrices).filter(
-    (val): val is number => typeof val === "number"
-  );
+  useEffect(() => {
+    const values = Object.values(averagePrices).filter(
+      (val): val is number => typeof val === "number"
+    );
 
     const total = values.reduce((sum, val) => sum + val, 0).toFixed(2);
     setTotalValue(total);
@@ -119,6 +136,9 @@ export default function MyCards() {
   useEffect(() => {
     if (cards.length > 0 && Object.keys(averagePrices).length === 0) {
       let delay = 0;
+      const toCalculate = cards.length;
+      setCalculatingCount(0);
+      setIsCalculating(true);
 
       cards.forEach((card) => {
         const condition = card.condition?.toUpperCase?.();
@@ -126,13 +146,14 @@ export default function MyCards() {
         const searchTerm = `${card.cardName} ${card.setName} ${card.cardNumber} ${conditionLabel}`;
 
         delay += 500;
-        fetchSoldAverage(searchTerm, card.id, delay);
+        fetchSoldAverage(searchTerm, card.id, delay, toCalculate);
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cards]);
 
   // 🗑️ Delete a card from Firestore and local state
-  const deleteCard = async (cardId:string):Promise<void> => {
+  const deleteCard = async (cardId: string): Promise<void> => {
     const confirmDelete = window.confirm("Are you sure you want to remove this card?");
     if (!confirmDelete) return;
 
@@ -145,7 +166,7 @@ export default function MyCards() {
         const { [cardId]: _, ...rest } = prev;
         return rest;
       });
-        } catch (error: unknown) {
+    } catch (error: unknown) {
       if (error instanceof Error) {
         alert("Error deleting card: " + error.message);
       } else {
@@ -155,36 +176,47 @@ export default function MyCards() {
   };
 
   // 🔁 Manual recalculation trigger
-  const handleRecalculate = ():void => {
+  const handleRecalculate = (): void => {
     let delay = 0;
-    setLoading(true);
+    setCalculatingCount(0);
+    setIsCalculating(true);
+    const toCalculate = cards.length;
     cards.forEach((card) => {
       const condition = card.condition?.toUpperCase?.();
       const conditionLabel = condition === "GRADED" ? "PSA" : condition;
       const searchTerm = `${card.cardName} ${card.setName} ${card.cardNumber} ${conditionLabel}`;
-
       delay += 500;
-      fetchSoldAverage(searchTerm, card.id, delay);
+      fetchSoldAverage(searchTerm, card.id, delay, toCalculate);
     });
-    setLoading(false);
   };
+
   // Automatically fetch price for cards missing a price
   useEffect(() => {
     if (cards.length === 0) return;
 
     let delay = 0;
+    let toCalculate = 0;
     cards.forEach((card) => {
-      // If this card does not have a price in averagePrices, fetch it
       if (averagePrices[card.id] === undefined) {
-        const condition = card.condition?.toUpperCase?.();
-        const conditionLabel = condition === "GRADED" ? "PSA" : condition;
-        const searchTerm = `${card.cardName} ${card.setName} ${card.cardNumber} ${conditionLabel}`;
-        delay += 500;
-        fetchSoldAverage(searchTerm, card.id, delay);
+        toCalculate++;
       }
     });
+    if (toCalculate > 0) {
+      setCalculatingCount(0);
+      setIsCalculating(true);
+      cards.forEach((card) => {
+        if (averagePrices[card.id] === undefined) {
+          const condition = card.condition?.toUpperCase?.();
+          const conditionLabel = condition === "GRADED" ? "PSA" : condition;
+          const searchTerm = `${card.cardName} ${card.setName} ${card.cardNumber} ${conditionLabel}`;
+          delay += 500;
+          fetchSoldAverage(searchTerm, card.id, delay, toCalculate);
+        }
+      });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cards]);
+
   // ⏳ Loading state
   if (loading) {
     return (
@@ -205,6 +237,7 @@ export default function MyCards() {
     return <p style={{ textAlign: "center" }}>Please sign in to view your cards.</p>;
   }
 
+
   // ✅ Main render
   return (
     <div
@@ -217,25 +250,34 @@ export default function MyCards() {
       }}
     >
       <h1 style={{ fontSize: "3em", textAlign: "center" }}>My Collection</h1>
-      
-    <div style={{ width: '100%', display: "flex", flexDirection: "column", alignItems: "center", margin: "20px auto", marginBottom: "40px" }}>
-      <h1 style={{ fontSize: "1.8em", textAlign: "center" }}>
-        Total Estimated Value: <span style={{ color: "#ffcc00" }}>${totalValue}</span>
-      </h1>
-      {lua && (
-        <p style={{ fontSize: "0.9em", color: "#ffcc00", margin: "-1em 0 0.5em 0" }}>
-          Last updated at: {lua}
+      <div
+        style={{
+          width: "100%",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          margin: "20px auto",
+          marginBottom: "40px",
+        }}
+      >
+        <h1 style={{ fontSize: "1.8em", textAlign: "center" }}>
+          Total Estimated Value: <span style={{ color: "#ffcc00" }}>${totalValue}</span>
+        </h1>
+        {lua && (
+          <p style={{ fontSize: "0.9em", color: "#ffcc00", margin: "-1em 0 0.5em 0" }}>
+            Last updated at: {lua}
+          </p>
+        )}
+
+        <button onClick={handleRecalculate} className="recalculateBtn">
+          🔄 Recalculate Card Values
+        </button>
+      </div>
+      {isCalculating && (
+        <p style={{ color: "#ffcc00", fontWeight: 600 }}>
+          Calculating Prices... ({calculatingCount}/{cards.length})
         </p>
       )}
-      
-      <button
-        onClick={handleRecalculate}
-        className="recalculateBtn"
-      >
-        🔄 Recalculate Card Values
-      </button>
-    </div>
-
       {cards.length === 0 ? (
         <p style={{ textAlign: "center" }}>You haven’t saved any cards yet.</p>
       ) : (
@@ -265,12 +307,34 @@ export default function MyCards() {
               >
                 Remove
               </button>
+              <button
+                onClick={() =>
+                  fetchSoldAverage(
+                    `${card.cardName} ${card.setName} ${card.cardNumber} ${card.condition}`,
+                    card.id,
+                    0,
+                    1
+                  )
+                }
+                className="deleteCardBtn"
+              >
+                Recalculate
+              </button>
             </div>
           ))}
         </div>
       )}
-      <p style={{maxWidth: '50%', fontSize: "0.8em", textAlign: 'center', marginTop: "4em"}}><strong>NOTE:</strong> These numbers are estimates. They are calculated by searching the card name, card number, set and condition together and taking the results
-    of that search on eBay and averaging out the most recent 8 sales. This may lead to inaccurate pricing if your card is not commonly traded.</p>
+      <p
+        style={{
+          maxWidth: "50%",
+          fontSize: "0.8em",
+          textAlign: "center",
+          marginTop: "4em",
+        }}
+      >
+        <strong>NOTE:</strong> These numbers are estimates. They are calculated by searching the card name, card number, set and condition together and taking the results
+        of that search on eBay and averaging out the most recent 8 sales. This may lead to inaccurate pricing if your card is not commonly traded.
+      </p>
     </div>
   );
 }
