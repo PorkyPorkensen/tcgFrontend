@@ -4,6 +4,8 @@ import { onAuthStateChanged } from "firebase/auth";
 import type { User } from "firebase/auth";
 import { collection, query, where, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import BackToTop from "../components/BackToTop";
+
 
 type CardType = {
   id: string;
@@ -35,6 +37,8 @@ export default function MyCards() {
   const [lua, setLua] = useState<string>("");
   const [calculatingCount, setCalculatingCount] = useState(0);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [refreshCooldown, setRefreshCooldown] = useState<number>(0);
+  const [refreshTimer, setRefreshTimer] = useState<NodeJS.Timeout | null>(null);
 
   // 🔄 Handle user auth state + fetch user's cards
   useEffect(() => {
@@ -176,19 +180,41 @@ export default function MyCards() {
   };
 
   // 🔁 Manual recalculation trigger
-  const handleRecalculate = (): void => {
-    let delay = 0;
-    setCalculatingCount(0);
-    setIsCalculating(true);
-    const toCalculate = cards.length;
-    cards.forEach((card) => {
-      const condition = card.condition?.toUpperCase?.();
-      const conditionLabel = condition === "GRADED" ? "PSA" : condition;
-      const searchTerm = `${card.cardName} ${card.setName} ${card.cardNumber} ${conditionLabel}`;
-      delay += 500;
-      fetchSoldAverage(searchTerm, card.id, delay, toCalculate);
+ const handleRecalculate = (): void => {
+  if (refreshCooldown > 0) return; // Prevent if still cooling down
+
+  let delay = 0;
+  setCalculatingCount(0);
+  setIsCalculating(true);
+  const toCalculate = cards.length;
+  cards.forEach((card) => {
+    const condition = card.condition?.toUpperCase?.();
+    const conditionLabel = condition === "GRADED" ? "PSA" : condition;
+    const searchTerm = `${card.cardName} ${card.setName} ${card.cardNumber} ${conditionLabel}`;
+    delay += 500;
+    fetchSoldAverage(searchTerm, card.id, delay, toCalculate);
+  });
+
+  // Start cooldown
+  setRefreshCooldown(300); // 300 seconds = 5 minutes
+  if (refreshTimer) clearInterval(refreshTimer);
+  const timer = setInterval(() => {
+    setRefreshCooldown((prev) => {
+      if (prev <= 1) {
+        clearInterval(timer);
+        return 0;
+      }
+      return prev - 1;
     });
+  }, 1000);
+  setRefreshTimer(timer);
+};
+
+useEffect(() => {
+  return () => {
+    if (refreshTimer) clearInterval(refreshTimer);
   };
+}, [refreshTimer]);
 
   // Automatically fetch price for cards missing a price
   useEffect(() => {
@@ -237,7 +263,18 @@ export default function MyCards() {
     return <p style={{ textAlign: "center" }}>Please sign in to view your cards.</p>;
   }
 
+  const problematicCards = cards.filter(card => {
+    const price = averagePrices[card.id];
+    return price === "N/A" || price === "Error" || price === 0;
+  });
 
+  const setCardValueToZero = (cardId: string) => {
+  setAveragePrices((prev) => ({ ...prev, [cardId]: 0 }));
+  localStorage.setItem(
+    "averagePrices",
+    JSON.stringify({ ...averagePrices, [cardId]: 0 })
+  );
+};
   // ✅ Main render
   return (
     <div
@@ -269,15 +306,49 @@ export default function MyCards() {
           </p>
         )}
 
-        <button onClick={handleRecalculate} className="recalculateBtn">
-          🔄 Recalculate Card Values
-        </button>
+        <button
+  onClick={handleRecalculate}
+  className="recalculateBtn"
+  disabled={refreshCooldown > 0}
+  style={refreshCooldown > 0 ? { opacity: 0.5, cursor: "not-allowed" } : {}}
+>
+  🔄 Recalculate Card Values
+  {refreshCooldown > 0 && (
+    <span style={{ marginLeft: 8, fontSize: "0.9em" }}>
+      (Wait {Math.floor(refreshCooldown / 60)}:{(refreshCooldown % 60).toString().padStart(2, "0")})
+    </span>
+  )}
+</button>
       </div>
       {isCalculating && (
         <p style={{ color: "#ffcc00", fontWeight: 600 }}>
           Calculating Prices... ({calculatingCount}/{cards.length})
         </p>
       )}
+      {!isCalculating && problematicCards.length > 0 && (
+  <div style={{
+    background: "#fff3cd",
+    color: "#856404",
+    border: "1px solid #ffeeba",
+    borderRadius: "6px",
+    padding: "1em",
+    marginBottom: "1em",
+    maxWidth: "350px",
+    textAlign: 'center'
+  }}>
+    <strong>There was a problem fetching the price for:</strong>
+    <ul style={{ margin: "0" }}>
+      {problematicCards.map(card => (
+        <li key={card.id}>
+          <span style={{ fontWeight: 600 }}>{card.cardName}</span>
+        </li>
+      ))}
+    </ul>
+    <div style={{ marginTop: "0.5em" }}>
+      Please find the card(s) below and hit <b>Recalculate</b> or hit the <b>Recalculate Card Values</b> button above.
+    </div>
+  </div>
+)}
       {cards.length === 0 ? (
         <p style={{ textAlign: "center" }}>You haven’t saved any cards yet.</p>
       ) : (
@@ -320,21 +391,30 @@ export default function MyCards() {
               >
                 Recalculate
               </button>
+              <button
+  onClick={() => setCardValueToZero(card.id)}
+  className="deleteCardBtn"
+  style={{ background: "#ffeeba", color: "#856404", marginLeft: "0.5em" }}
+>
+  Set Value to 0
+</button>
             </div>
           ))}
         </div>
       )}
-      <p
-        style={{
-          maxWidth: "50%",
-          fontSize: "0.8em",
-          textAlign: "center",
-          marginTop: "4em",
-        }}
-      >
-        <strong>NOTE:</strong> These numbers are estimates. They are calculated by searching the card name, card number, set and condition together and taking the results
-        of that search on eBay and averaging out the most recent 8 sales. This may lead to inaccurate pricing if your card is not commonly traded.
-      </p>
+<p
+  style={{
+    maxWidth: "50%",
+    fontSize: "0.8em",
+    textAlign: "center",
+    marginTop: "4em",
+    marginBottom: "6em", // <-- Add this line
+  }}
+>
+  <strong>NOTE:</strong> These numbers are estimates. They are calculated by searching the card name, card number, set and condition together and taking the results
+  of that search on eBay and averaging out the most recent 8 sales. This may lead to inaccurate pricing if your card is not commonly traded.
+</p>
+      <BackToTop />
     </div>
   );
 }
