@@ -24,7 +24,7 @@ export default function BackToTop() {
       onClick={handleClick}
       style={{
         position: "fixed",
-        bottom: 50,
+        bottom: 35,
         left: "50%",
         transform: "translateX(-50%)",
         zIndex: 1000,

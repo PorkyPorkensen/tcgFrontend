@@ -391,13 +391,16 @@ useEffect(() => {
               >
                 Recalculate
               </button>
-              <button
-  onClick={() => setCardValueToZero(card.id)}
-  className="deleteCardBtn"
-  style={{ background: "#ffeeba", color: "#856404", marginLeft: "0.5em" }}
->
-  Set Value to 0
-</button>
+              {
+                
+              // Dev Reset Price Button
+              /* <button
+              onClick={() => setCardValueToZero(card.id)}
+              className="deleteCardBtn"
+              style={{ background: "#ffeeba", color: "#856404", marginLeft: "0.5em" }}
+            >
+              Set Value to 0
+            </button> */}
             </div>
           ))}
         </div>
