@@ -28,3 +28,15 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+/// <reference types="vite/client" />
+
+interface ImportMetaEnv {
+  readonly VITE_REACT_APP_RAPIDAPI_KEY: string;
+  readonly VITE_REACT_APP_RAPIDAPI_HOST: string;
+  // add other env vars here as needed
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}

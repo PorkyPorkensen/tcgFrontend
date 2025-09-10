@@ -39,8 +39,32 @@ type FixedPriceCardResult = {
   itemWebUrl: string;
 };
 
+const filterOptions = [
+  "NM",
+  "MINT",
+  "DMG",
+  "HP",
+  "LP",
+  "GRADED 10",
+  "GRADED 9",
+  "GRADED 8",
+  "GRADED 7",
+  "GRADED 6",
+  "GRADED 5",
+  "GRADED 4",
+  "GRADED 3",
+  "GRADED 2",
+  "GRADED 1",
+];
+
 export default function SearchCards() {
   const [query, setQuery] = useState<string>("");
+  const [tcgResults, setTcgResults] = useState<any[]>([]);
+  const [selectedCard, setSelectedCard] = useState<any>(() => {
+    const saved = localStorage.getItem("selectedCard");
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [ebayFilters, setEbayFilters] = useState<string[]>([]);
   const [auctionResults, setAuctionResults] = useState<AuctionCardResult[]>([]);
   const [fixedPriceResults, setFixedPriceResults] = useState<FixedPriceCardResult[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -51,17 +75,44 @@ export default function SearchCards() {
   const [soldResults, setSoldResults] = useState<SoldCardResult[]>([]);
   const EPN_CAMPAIGN_ID = "5339116843";
 
-  const appendEPNTracking = (url: string) => {
+  // Step 1: Search Pokémon TCG API
+  const searchTcgCards = async (searchTerm: string) => {
+    setLoading(true);
+    setSelectedCard(null);
+    setTcgResults([]);
+    setHasSearched(false);
+    setError(null);
+    const encodedQuery = encodeURIComponent(searchTerm);
+    const url = `https://pokemon-tcg-api.p.rapidapi.com/cards/search?search=${encodedQuery}&sort=price_highest`;
+    
+    
+    const options = {
+      method: "GET",
+      headers: {
+      "x-rapidapi-key": import.meta.env.VITE_REACT_APP_RAPIDAPI_KEY || "",
+      "x-rapidapi-host": import.meta.env.VITE_REACT_APP_RAPIDAPI_HOST || "",
+    },
+    };
     try {
-      const u = new URL(url);
-      u.searchParams.set("campid", EPN_CAMPAIGN_ID);
-      return u.toString();
+      const response = await fetch(url, options);
+      const data = await response.json();
+      setTcgResults(data.data || []);
     } catch (err) {
-      console.error("Invalid eBay URL:", url);
-      return url;
+      setError("Failed to fetch cards.");
     }
+    setLoading(false);
   };
 
+  // Step 2: eBay search with filters, using card name, set/series, and card_number
+  const fetchCardsWithFilters = async (card: any, filters: string[]) => {
+    const filterString = filters.length ? " " + filters.join(" ") : "";
+    const setName = card.episode?.name || "";
+    const cardNumber = card.card_number ? ` ${card.card_number}` : "";
+    const searchTerm = `${card.name} ${setName}${cardNumber}${filterString}`;
+    fetchCards(searchTerm.trim());
+  };
+
+  // eBay fetch logic (existing)
   const fetchCards = async (searchTerm: string): Promise<void> => {
     try {
       const encodedQuery = encodeURIComponent(searchTerm || query);
@@ -72,7 +123,6 @@ export default function SearchCards() {
         `https://tcgbackend-951874125609.us-east4.run.app/api/sold?term=${encodedQuery}`
       );
       const soldData = await soldRes.json();
-      console.log("SOLD API DATA:", soldData);
       if (Array.isArray(soldData)) {
         setSoldResults(soldData);
       } else {
@@ -104,11 +154,20 @@ export default function SearchCards() {
       localStorage.setItem("lastAuctionResults", JSON.stringify(auctionData.itemSummaries || []));
       localStorage.setItem("lastFixedPriceResults", JSON.stringify(fixedData.itemSummaries || []));
     } catch (err) {
-      console.error(err);
       setError("Something went wrong. Please try again.");
     }
     setHasSearched(true);
     setLoading(false);
+  };
+
+  const appendEPNTracking = (url: string) => {
+    try {
+      const u = new URL(url);
+      u.searchParams.set("campid", EPN_CAMPAIGN_ID);
+      return u.toString();
+    } catch (err) {
+      return url;
+    }
   };
 
   const handleClearResults = (): void => {
@@ -118,10 +177,14 @@ export default function SearchCards() {
     setFixedPriceResults([]);
     setHasSearched(false);
     setError(null);
+    setTcgResults([]);
+    setSelectedCard(null);
+    setEbayFilters([]);
     localStorage.removeItem("lastQuery");
     localStorage.removeItem("lastSoldResults");
     localStorage.removeItem("lastAuctionResults");
     localStorage.removeItem("lastFixedPriceResults");
+    localStorage.removeItem("selectedCard");
   };
 
   useEffect(() => {
@@ -166,7 +229,7 @@ export default function SearchCards() {
 
   const handleBookmarkClick = (term: string): void => {
     setQuery(term);
-    fetchCards(term);
+    searchTcgCards(term);
   };
 
   const handleRemoveBookmark = (termToRemove: string): void => {
@@ -182,12 +245,12 @@ export default function SearchCards() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter") fetchCards(query);
+            if (e.key === "Enter") searchTcgCards(query);
           }}
           placeholder="Search trading cards (e.g., Charizard)"
         />
         <button
-          onClick={() => fetchCards(query)}
+          onClick={() => searchTcgCards(query)}
           style={{
             padding: "0.5rem 1rem",
             height: "41px",
@@ -258,90 +321,142 @@ export default function SearchCards() {
         </div>
       )}
 
-      {!hasSearched && (
+      {/* Step 1: Show TCG search results for selection */}
+      {tcgResults.length > 0 && !selectedCard && (
         <div>
-          <div className="howToUse">
-            <h2>MTG COMING SOON!!</h2>
-          </div>
-          <div className="howToUse">
-            <h3>View Listings</h3>
-            <p>
-              On this page, enter a Pokémon card name in the search bar and click search.
-              You may bookmark a search by clicking the button beside search
-            </p>
-            <h3>Add Cards to your Collection</h3>
-            <p>
-              Head to the{" "}
-              <a style={{ textDecoration: "underline" }} href="/cards">
-                Pokemon
-              </a>{" "}
-              tab to view all cards for a specific Pokémon. You can select a condition
-              for each card and add it to your collection.
-            </p>
-            <h3>View Your Cards</h3>
-            <p>
-              Go to the{" "}
-              <a style={{ textDecoration: "underline" }} href="/mycards">
-                My Cards
-              </a>{" "}
-              tab to see all the cards you've added, their conditions, average sold
-              prices, and a rough Estimated value of your collection.
-            </p>
-          </div>
-          <div className="howToUse">
-            <p style={{ fontSize: "0.7em", marginTop: "3em" }}>
-              NOTE: clicking on links to some listings from this site and make a
-              purchase, can result in this site earning a commission. Affiliate programs
-              and affiliations include, but are not limited to, the eBay Partner Network.
-            </p>
+          <h3 style={{textAlign: 'center', color: '#ffcc00', marginTop: '3.5em'}}>Select a card:</h3>
+          <div className="horizontalScroll">
+            {tcgResults.map((card: any) => (
+              <div
+                key={card.id}
+                onClick={() => {
+                  setSelectedCard(card);
+                  localStorage.setItem("selectedCard", JSON.stringify(card));
+                  console.log('Selected card:', card);
+                }}
+                className="cardItem"
+                style={{ cursor: "pointer" }}
+              >
+                <img src={card.image} alt={card.name} width={120} />
+                <div>{card.name}</div>
+                <div>{card.episode?.name} #{card.card_number}</div>
+                <div>HP: {card.hp}</div>
+                <div>Rarity: {card.rarity}</div>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      {hasSearched && (
-        <>
-          {/* Sold Listings Section */}
-<div className="hello">
-  <button className="cr" onClick={handleClearResults}>
-    Clear Results
-  </button>
-  <h2
-    className="subHead"
-    style={{
-      fontFamily: '"Luckiest Guy", sans-serif',
-      textAlign: "center",
-    }}
-  >
-    Sold Listings (USD)
-  </h2>
-
-  <div className="horizontalScroll">
-    {Array.isArray(soldResults) && soldResults.length > 0 ? (
-      soldResults.map((item, i) => (
-        <div key={i} className="cardItem">
-          <strong>{item.title}</strong>
-          <p style={{ color: "limegreen", fontWeight: "bold" }}>
-            SOLD {item.price || item.salePrice}
-          </p>
-          <p>{item.date}</p>
-          {item.image && (
-            <img width={150} src={item.image} alt="Sold item" />
-          )}
-          <a
-            href={appendEPNTracking(item.link)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="vob"
+      {/* Step 2: Show eBay filter options and search button */}
+      {selectedCard && !hasSearched && (
+        <div style={{ marginTop: '3.5em' }}>
+          <h3 style={{textAlign: 'center', color: '#ffcc00'}}>Condition Filters:</h3>
+          <div style={{ textAlign: 'center', marginBottom: '1em' }}>
+            <select
+              value={ebayFilters[0] || ""}
+              onChange={e => {
+                const val = e.target.value;
+                setEbayFilters(val ? [val] : []);
+              }}
+              style={{ padding: '0.5em', borderRadius: 6, border: '1px solid #ccc', minWidth: 120 }}
+            >
+              <option value="">Select Condition</option>
+              {filterOptions.map(opt => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+            </select>
+          </div>
+          <button
+            style={{
+              display: 'flex',
+              margin: '1em auto',
+              padding: "0.5rem 1rem",
+              backgroundColor: "#ffcc00",
+              color: "black",
+              border: "1px solid transparent",
+              borderRadius: '10px'
+            }}
+            onClick={() => fetchCardsWithFilters(selectedCard, ebayFilters)}
           >
-            View on eBay
-          </a>
+            Confirm
+          </button>
         </div>
-      ))
-    ) : (
-      <p>No sold results found.</p>
-    )}
-  </div>
-</div>
+      )}
+
+      {/* Step 3: Show results */}
+  {hasSearched && (
+        <>
+          {/* Selected Card Info */}
+          {selectedCard && (
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "1.5em",
+              margin: "2.5em auto 1.5em auto",
+              padding: "1em",
+              background: "#23243a",
+              borderRadius: "10px",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+              width: "60%",
+              minWidth: '300px'
+
+            }}>
+              <img src={selectedCard.image} alt={selectedCard.name} width={100} style={{ borderRadius: 8, background: "#fff" }} />
+              <div>
+                <h2 style={{ margin: 0 }}>{selectedCard.name} #{selectedCard.card_number}</h2>
+                {selectedCard.rarity && (
+                  <div style={{ fontSize: "0.95em", color: "#b3b3b3" }}>{selectedCard.rarity}</div>
+                )}
+                <div style={{ fontSize: "0.95em", color: "#b3b3b3" }}>RAW NM Price: ${selectedCard.prices.cardmarket.lowest_near_mint}</div>
+              </div>
+            </div>
+          )}
+          {/* Always show Clear Results button when results are displayed */}
+          <div style={{ marginBottom: '1em' }}>
+            <button className="cr" onClick={handleClearResults}>
+              Clear Results
+            </button>
+          </div>
+
+          {Array.isArray(soldResults) && soldResults.length > 0 && (
+            <div className="hello">
+              <h2
+                className="subHead"
+                style={{
+                  fontFamily: '"Luckiest Guy", sans-serif',
+                  textAlign: "center",
+                }}
+              >
+                Sold Listings (USD)
+              </h2>
+              <div
+                className="horizontalScroll"
+                style={soldResults.length === 1 ? { justifyContent: 'center', display: 'flex' } : {}}
+              >
+                {soldResults.map((item, i) => (
+                  <div key={i} className="cardItem">
+                    <strong>{item.title}</strong>
+                    <p style={{ color: "limegreen", fontWeight: "bold" }}>
+                      SOLD {item.price || item.salePrice}
+                    </p>
+                    <p>{item.date}</p>
+                    {item.image && (
+                      <img width={150} src={item.image} alt="Sold item" />
+                    )}
+                    <a
+                      href={appendEPNTracking(item.link)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="vob"
+                    >
+                      View on eBay
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Auction Listings */}
           <div>
@@ -354,7 +469,10 @@ export default function SearchCards() {
             >
               Auction Listings
             </h2>
-            <div className="horizontalScroll">
+            <div
+              className="horizontalScroll"
+              style={auctionResults.length === 1 ? { justifyContent: 'center', display: 'flex' } : {}}
+            >
               {auctionResults.map((item) => (
                 <div key={item.itemId} className="cardItem">
                   <strong>{item.title}</strong>
@@ -392,7 +510,10 @@ export default function SearchCards() {
             >
               Fixed Price Listings
             </h2>
-            <div className="horizontalScroll">
+            <div
+              className="horizontalScroll"
+              style={fixedPriceResults.length === 1 ? { justifyContent: 'center', display: 'flex' } : {}}
+            >
               {fixedPriceResults.map((item) => (
                 <div key={item.itemId} className="cardItem">
                   <strong>{item.title}</strong>
@@ -416,6 +537,47 @@ export default function SearchCards() {
             </div>
           </div>
         </>
+      )}
+
+      {/* How to use section if nothing searched */}
+      {!hasSearched && tcgResults.length === 0 && !loading && (
+        <div>
+          <div className="howToUse">
+            <h2>MTG COMING SOON!!</h2>
+          </div>
+          <div className="howToUse">
+            <h3>View Listings</h3>
+            <p>
+              On this page, enter a Pokémon card name in the search bar and click search.
+              You may bookmark a search by clicking the button beside search
+            </p>
+            <h3>Add Cards to your Collection</h3>
+            <p>
+              Head to the{" "}
+              <a style={{ textDecoration: "underline" }} href="/cards">
+                Pokemon
+              </a>{" "}
+              tab to view all cards for a specific Pokémon. You can select a condition
+              for each card and add it to your collection.
+            </p>
+            <h3>View Your Cards</h3>
+            <p>
+              Go to the{" "}
+              <a style={{ textDecoration: "underline" }} href="/mycards">
+                My Cards
+              </a>{" "}
+              tab to see all the cards you've added, their conditions, average sold
+              prices, and a rough Estimated value of your collection.
+            </p>
+          </div>
+          <div className="howToUse">
+            <p style={{ fontSize: "0.7em", marginTop: "3em" }}>
+              NOTE: clicking on links to some listings from this site and make a
+              purchase, can result in this site earning a commission. Affiliate programs
+              and affiliations include, but are not limited to, the eBay Partner Network.
+            </p>
+          </div>
+        </div>
       )}
     </div>
   );

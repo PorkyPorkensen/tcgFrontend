@@ -9,5 +9,6 @@ export default defineConfig({
   },
   server: {
     historyApiFallback: true
-  }
+  },
+  assetsInclude: ['**/*.lottie'],
 })

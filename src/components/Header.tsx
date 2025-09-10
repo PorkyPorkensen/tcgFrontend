@@ -38,7 +38,7 @@ export default function Header(): JSX.Element {
 
       <div className="linkDiv">
         <NavLink to="/" className={({ isActive }) => (isActive ? "active" : "")}>
-          eBay Lookup
+          Lookup
         </NavLink>
         <NavLink to="/cards" className={({ isActive }) => (isActive ? "active" : "")}>
           Pokemon

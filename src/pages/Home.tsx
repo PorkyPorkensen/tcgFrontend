@@ -10,7 +10,7 @@ export default function Home() {
   
     return (
     <div>
-      <h1 style={{fontSize: '2.5em', textAlign: 'center', marginTop: '2em'}}>eBay Lookup</h1>
+      <h1 style={{fontSize: '2.5em', textAlign: 'center', marginTop: '2em'}}>Search cards</h1>
       <SearchCards />
     </div>
   );
