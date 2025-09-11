@@ -143,7 +143,7 @@ export default function SearchCards() {
 
       // Fetch AUCTION items
       const auctionRes = await fetch(
-        `http://localhost:8080/api/search?q=${encodedQuery}&filter=${encodeURIComponent(
+        `https://tcgbackend-951874125609.us-east4.run.app/api/search?q=${encodedQuery}&filter=${encodeURIComponent(
           "buyingOptions:{AUCTION}"
         )}`
       );
@@ -151,7 +151,7 @@ export default function SearchCards() {
 
       // Fetch FIXED_PRICE items
       const fixedRes = await fetch(
-        `http://localhost:8080/api/search?q=${encodedQuery}&filter=${encodeURIComponent(
+        `https://tcgbackend-951874125609.us-east4.run.app/api/search?q=${encodedQuery}&filter=${encodeURIComponent(
           "buyingOptions:{FIXED_PRICE}"
         )}`
       );
