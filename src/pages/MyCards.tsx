@@ -40,7 +40,12 @@ export default function MyCards() {
       if (/^GRADED \d+$/i.test(condition)) {
         condition = condition.replace(/^GRADED/, "PSA");
       }
-      const searchTerm = `${card.cardName} ${card.setName} ${card.cardNumber} ${condition}`;
+      // Add year if available
+      let year = "";
+      if ((card as any).episode?.released_at) {
+        year = " " + (card as any).episode.released_at.slice(0, 4);
+      }
+      const searchTerm = `${card.cardName} ${card.setName} ${card.cardNumber} ${condition}${year}`;
       try {
         const fixedRes = await fetch(
           `https://tcgbackend-951874125609.us-east4.run.app/api/search?q=${encodeURIComponent(searchTerm)}&filter=${encodeURIComponent("buyingOptions:{FIXED_PRICE}")}`

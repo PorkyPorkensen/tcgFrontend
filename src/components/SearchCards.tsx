@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import BackToTop from "../components/BackToTop";
 
 type SoldCardResult = {
   itemId?: string;
@@ -74,29 +75,36 @@ export default function SearchCards() {
   const [loading, setLoading] = useState<boolean>(false);
   const [soldResults, setSoldResults] = useState<SoldCardResult[]>([]);
   const EPN_CAMPAIGN_ID = "5339116843";
+  const [showConditionModal, setShowConditionModal] = useState(false);
 
   // Step 1: Search Pokémon TCG API
-  const searchTcgCards = async (searchTerm: string) => {
+  const searchTcgCards = async (searchTerm: string, card?: any) => {
     setLoading(true);
     setSelectedCard(null);
     setTcgResults([]);
     setHasSearched(false);
     setError(null);
-    const encodedQuery = encodeURIComponent(searchTerm);
+    let queryWithYear = searchTerm;
+    if (card && card.episode?.released_at) {
+      const year = card.episode.released_at.slice(0, 4);
+      if (year) queryWithYear += ` ${year}`;
+    }
+    const encodedQuery = encodeURIComponent(queryWithYear);
     const url = `https://pokemon-tcg-api.p.rapidapi.com/cards/search?search=${encodedQuery}&sort=price_highest`;
-    
-    
     const options = {
       method: "GET",
       headers: {
-      "x-rapidapi-key": import.meta.env.VITE_REACT_APP_RAPIDAPI_KEY || "",
-      "x-rapidapi-host": import.meta.env.VITE_REACT_APP_RAPIDAPI_HOST || "",
-    },
+        "x-rapidapi-key": import.meta.env.VITE_REACT_APP_RAPIDAPI_KEY || "",
+        "x-rapidapi-host": import.meta.env.VITE_REACT_APP_RAPIDAPI_HOST || "",
+      },
     };
     try {
       const response = await fetch(url, options);
       const data = await response.json();
       setTcgResults(data.data || []);
+      if (Array.isArray(data.data) && data.data.length === 0) {
+        setError("Pokemon not found, ensure proper spelling and try again");
+      }
     } catch (err) {
       setError("Failed to fetch cards.");
     }
@@ -108,7 +116,11 @@ export default function SearchCards() {
     const filterString = filters.length ? " " + filters.join(" ") : "";
     const setName = card.episode?.name || "";
     const cardNumber = card.card_number ? ` ${card.card_number}` : "";
-    const searchTerm = `${card.name} ${setName}${cardNumber}${filterString}`;
+    let year = "";
+    if (card.episode?.released_at) {
+      year = " " + card.episode.released_at.slice(0, 4);
+    }
+    const searchTerm = `${card.name} ${setName}${cardNumber}${filterString}${year}`;
     fetchCards(searchTerm.trim());
   };
 
@@ -131,7 +143,7 @@ export default function SearchCards() {
 
       // Fetch AUCTION items
       const auctionRes = await fetch(
-        `https://tcgbackend-951874125609.us-east4.run.app/api/search?q=${encodedQuery}&filter=${encodeURIComponent(
+        `http://localhost:8080/api/search?q=${encodedQuery}&filter=${encodeURIComponent(
           "buyingOptions:{AUCTION}"
         )}`
       );
@@ -139,7 +151,7 @@ export default function SearchCards() {
 
       // Fetch FIXED_PRICE items
       const fixedRes = await fetch(
-        `https://tcgbackend-951874125609.us-east4.run.app/api/search?q=${encodedQuery}&filter=${encodeURIComponent(
+        `http://localhost:8080/api/search?q=${encodedQuery}&filter=${encodeURIComponent(
           "buyingOptions:{FIXED_PRICE}"
         )}`
       );
@@ -271,7 +283,13 @@ export default function SearchCards() {
         </button>
       </div>
 
-      {error && <p>{error}</p>}
+      {error && (
+        error === "Pokemon not found, ensure proper spelling and try again" ? (
+          <div className="howToUse" style={{ marginTop: '2em', color: '#ffcc00', fontWeight: 600, fontSize: '1.2em', textDecoration: 'underline' }}>{error}</div>
+        ) : (
+          <p>{error}</p>
+        )
+      )}
 
       {tcgbookmarks.length > 0 && (
         <div style={{ marginTop: "1em", textAlign: "center" }}>
@@ -324,14 +342,15 @@ export default function SearchCards() {
       {/* Step 1: Show TCG search results for selection */}
       {tcgResults.length > 0 && !selectedCard && (
         <div>
-          <h2 style={{ textAlign: "center", color: "#ffcc00", marginBottom: "1em", textShadow: "1px 1px 2px #000", marginTop: '3.5em' }}>Select a card:</h2>
+          <h2 style={{ textAlign: "center", color: "#ffcc00", marginBottom: "2em", textShadow: "1px 1px 2px #000", marginTop: '3.5em' }}>Select a card:</h2>
           <div className="tcgGrid">
   {tcgResults.map((card: any) => (
     <div
       key={card.id}
       onClick={() => {
-        setSelectedCard(card);
-        localStorage.setItem("selectedCard", JSON.stringify(card));
+      setSelectedCard(card);
+      localStorage.setItem("selectedCard", JSON.stringify(card));
+      setShowConditionModal(true);
         console.log('Selected card:', card);
       }}
       className="cardItem"
@@ -349,40 +368,57 @@ export default function SearchCards() {
       )}
 
       {/* Step 2: Show eBay filter options and search button */}
-      {selectedCard && !hasSearched && (
-        <div style={{ marginTop: '3.5em' }}>
-          <h2 style={{ textAlign: "center", color: "#ffcc00", marginBottom: "1em", textShadow: "1px 1px 2px #000"}}>Select Condition:</h2>
-          <div style={{ textAlign: 'center', marginBottom: '1em' }}>
-            <select
-              value={ebayFilters[0] || ""}
-              onChange={e => {
-                const val = e.target.value;
-                setEbayFilters(val ? [val] : []);
-              }}
-              style={{ padding: '0.5em', borderRadius: 6, border: '1px solid #ccc', minWidth: 120 }}
-            >
-              <option value="">Select Condition</option>
-              {filterOptions.map(opt => (
-                <option key={opt} value={opt}>{opt}</option>
-              ))}
-            </select>
-          </div>
-          <button
-            style={{
-              display: 'flex',
-              margin: '1em auto',
-              padding: "0.5rem 1rem",
-              backgroundColor: "#ffcc00",
-              color: "black",
-              border: "1px solid transparent",
-              borderRadius: '10px'
-            }}
-            onClick={() => fetchCardsWithFilters(selectedCard, ebayFilters)}
-          >
-            Confirm
-          </button>
-        </div>
-      )}
+      {showConditionModal && selectedCard && (
+  <div className="modal-overlay" onClick={() => setShowConditionModal(false)}>
+    <div
+      className="modal-content"
+      onClick={e => e.stopPropagation()}
+      style={{
+        animation: "fadeInUp 0.3s",
+        background: "#23243a",
+        padding: "1em",
+        borderRadius: "10px",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+        width: "300px",
+        margin: "2em auto"
+      }}
+    >
+      <h2 style={{ textAlign: "center", color: "#ffcc00", marginBottom: "1em", textShadow: "1px 1px 2px #000" }}>Select Condition:</h2>
+      <div style={{ textAlign: 'center', marginBottom: '1em' }}>
+        <select
+          value={ebayFilters[0] || ""}
+          onChange={e => {
+            const val = e.target.value;
+            setEbayFilters(val ? [val] : []);
+          }}
+          style={{ padding: '0.5em', borderRadius: 6, border: '1px solid #ccc', minWidth: 120 }}
+        >
+          <option value="">Select Condition</option>
+          {filterOptions.map(opt => (
+            <option key={opt} value={opt}>{opt}</option>
+          ))}
+        </select>
+      </div>
+      <button
+        style={{
+          display: 'flex',
+          margin: '1em auto',
+          padding: "0.5rem 1rem",
+          backgroundColor: "#ffcc00",
+          color: "black",
+          border: "1px solid transparent",
+          borderRadius: '10px'
+        }}
+        onClick={() => {
+          fetchCardsWithFilters(selectedCard, ebayFilters);
+          setShowConditionModal(false);
+        }}
+      >
+        Confirm
+      </button>
+    </div>
+  </div>
+)}
 
       {/* Step 3: Show results */}
   {hasSearched && (
@@ -398,7 +434,7 @@ export default function SearchCards() {
               background: "#23243a",
               borderRadius: "10px",
               boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-              width: '300px',
+              width: '360px',
               height: '170px'
 
             }}>
@@ -515,7 +551,7 @@ export default function SearchCards() {
             </h2>
             <div
               className="horizontalScroll"
-              style={fixedPriceResults.length === 1 ? { justifyContent: 'center', display: 'flex' } : {}}
+              style={fixedPriceResults.length === 1 ? { justifyContent: 'center', display: 'flex' } : {marginBottom: '2em'}}
             >
               {fixedPriceResults.map((item) => (
                 <div key={item.itemId} className="cardItem">
@@ -582,6 +618,7 @@ export default function SearchCards() {
           </div>
         </div>
       )}
+      { fixedPriceResults.length + auctionResults.length + soldResults.length > 0 && <BackToTop /> }
     </div>
   );
 }
