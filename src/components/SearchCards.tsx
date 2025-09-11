@@ -287,7 +287,7 @@ export default function SearchCards() {
         error === "Pokemon not found, ensure proper spelling and try again" ? (
           <div className="howToUse" style={{ marginTop: '2em', color: '#ffcc00', fontWeight: 600, fontSize: '1.2em', textDecoration: 'underline' }}>{error}</div>
         ) : (
-          <p>{error}</p>
+          <p style={{textAlign: "center", margin: '2em 0'}}>{error}</p>
         )
       )}
 
@@ -534,7 +534,7 @@ export default function SearchCards() {
                   </a>
                 </div>
               ))}
-              {auctionResults.length === 0 && <p>No auction results found.</p>}
+              {auctionResults.length === 0 && <p style={{textAlign: "center"}}>No auction results found.</p>}
             </div>
           </div>
 
@@ -572,7 +572,7 @@ export default function SearchCards() {
                   </a>
                 </div>
               ))}
-              {fixedPriceResults.length === 0 && <p>No fixed price results found.</p>}
+              {fixedPriceResults.length === 0 && <p style={{textAlign: "center"}}>No fixed price results found.</p>}
             </div>
           </div>
         </>
