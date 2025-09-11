@@ -27,11 +27,6 @@ export default function FAQ(): JSX.Element {
         This could be due to several reasons: The most common is that the API I am using is the PokemonTCG API, which will return almost all cards,
         but not every variety of a card. For example, Reverse Holos are not <strong>yet</strong> in the database. 
       </p>
-      <h2>Why does each of my cards' "Avg Sold Price" load individually?</h2>
-      <p>
-        The average sold price for each card is calculated by searching for recent sales data based on the card and condition you selected. Each card is processed one at a time to ensure accurate results and to respect API rate limits. This can take some time, especially if you have many cards saved.
-      </p>
-      <h2>Have a more detailed question?</h2>
       <p>Contact: mitchvwebsolutions@gmail.com</p>
     </div>
   );
