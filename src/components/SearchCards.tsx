@@ -132,7 +132,7 @@ export default function SearchCards() {
 
       // Fetch SOLD items
       const soldRes = await fetch(
-        `http://localhost:8080/api/sold?term=${encodedQuery}`
+        `https://tcgbackend-951874125609.us-east4.run.app/api/sold?term=${encodedQuery}`
       );
       const soldData = await soldRes.json();
       if (Array.isArray(soldData)) {
