@@ -120,7 +120,7 @@ export default function SearchCards() {
 
       // Fetch SOLD items
       const soldRes = await fetch(
-        `https://tcgbackend-951874125609.us-east4.run.app/api/sold?term=${encodedQuery}`
+        `http://localhost:8080/api/sold?term=${encodedQuery}`
       );
       const soldData = await soldRes.json();
       if (Array.isArray(soldData)) {
@@ -324,34 +324,34 @@ export default function SearchCards() {
       {/* Step 1: Show TCG search results for selection */}
       {tcgResults.length > 0 && !selectedCard && (
         <div>
-          <h3 style={{textAlign: 'center', color: '#ffcc00', marginTop: '3.5em'}}>Select a card:</h3>
-          <div className="horizontalScroll">
-            {tcgResults.map((card: any) => (
-              <div
-                key={card.id}
-                onClick={() => {
-                  setSelectedCard(card);
-                  localStorage.setItem("selectedCard", JSON.stringify(card));
-                  console.log('Selected card:', card);
-                }}
-                className="cardItem"
-                style={{ cursor: "pointer" }}
-              >
-                <img src={card.image} alt={card.name} width={120} />
-                <div>{card.name}</div>
-                <div>{card.episode?.name} #{card.card_number}</div>
-                <div>HP: {card.hp}</div>
-                <div>Rarity: {card.rarity}</div>
-              </div>
-            ))}
-          </div>
+          <h2 style={{ textAlign: "center", color: "#ffcc00", marginBottom: "1em", textShadow: "1px 1px 2px #000", marginTop: '3.5em' }}>Select a card:</h2>
+          <div className="tcgGrid">
+  {tcgResults.map((card: any) => (
+    <div
+      key={card.id}
+      onClick={() => {
+        setSelectedCard(card);
+        localStorage.setItem("selectedCard", JSON.stringify(card));
+        console.log('Selected card:', card);
+      }}
+      className="cardItem"
+      style={{ cursor: "pointer" }}
+    >
+      <img src={card.image} alt={card.name} width={120} />
+      <div>{card.name}</div>
+      <div>{card.episode?.name} #{card.card_number}</div>
+      <div>HP: {card.hp}</div>
+      <div>Rarity: {card.rarity}</div>
+    </div>
+  ))}
+</div>
         </div>
       )}
 
       {/* Step 2: Show eBay filter options and search button */}
       {selectedCard && !hasSearched && (
         <div style={{ marginTop: '3.5em' }}>
-          <h3 style={{textAlign: 'center', color: '#ffcc00'}}>Condition Filters:</h3>
+          <h2 style={{ textAlign: "center", color: "#ffcc00", marginBottom: "1em", textShadow: "1px 1px 2px #000"}}>Select Condition:</h2>
           <div style={{ textAlign: 'center', marginBottom: '1em' }}>
             <select
               value={ebayFilters[0] || ""}
@@ -398,8 +398,8 @@ export default function SearchCards() {
               background: "#23243a",
               borderRadius: "10px",
               boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-              width: "60%",
-              minWidth: '300px'
+              width: '300px',
+              height: '170px'
 
             }}>
               <img src={selectedCard.image} alt={selectedCard.name} width={100} style={{ borderRadius: 8, background: "#fff" }} />
@@ -407,6 +407,9 @@ export default function SearchCards() {
                 <h2 style={{ margin: 0 }}>{selectedCard.name} #{selectedCard.card_number}</h2>
                 {selectedCard.rarity && (
                   <div style={{ fontSize: "0.95em", color: "#b3b3b3" }}>{selectedCard.rarity}</div>
+                )}
+                {selectedCard.episode.name && (
+                  <div style={{ fontSize: "0.95em", color: "#b3b3b3" }}>{selectedCard.episode.name}</div>
                 )}
                 <div style={{ fontSize: "0.95em", color: "#b3b3b3" }}>RAW NM Price: ${selectedCard.prices.cardmarket.lowest_near_mint}</div>
               </div>

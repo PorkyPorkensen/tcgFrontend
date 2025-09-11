@@ -165,6 +165,15 @@ button:focus-visible {
   text-align: center;
 }
 
+.tcgGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5em;
+  justify-items: center;
+  width: 100%;
+  margin: 0 auto;
+}
+
 .vob {
   margin-top: auto;
   color: #00bfff;
@@ -312,6 +321,7 @@ button:focus-visible {
   text-align: center;
   box-shadow: 1px 4px 6px rgba(0, 0, 0, 0.726);
 }
+
 .addBtn {
   background-color: #FFD93D;
   color: #000;
