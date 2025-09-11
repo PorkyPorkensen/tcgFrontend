@@ -157,6 +157,66 @@ useEffect(() => {
     if (cards.length > 0) fetchEstimates();
   }, [cards]);
 
+  useEffect(() => {
+  // Only run if not already calculating and not in cooldown
+  if (!loading && !recalcCooldown && cards.length > 0) {
+    const missing = cards.filter(card => estimates[card.id] === undefined);
+    if (missing.length > 0) {
+      // Only fetch for missing cards
+      const fetchMissingEstimates = async () => {
+        const newEstimates: Record<string, number> = { ...estimates };
+        for (const card of missing) {
+          let condition = card.condition;
+          if (/^GRADED \d+$/i.test(condition)) {
+            condition = condition.replace(/^GRADED/, "PSA");
+          }
+          let year = "";
+          if ((card as any).episode?.released_at) {
+            year = " " + (card as any).episode.released_at.slice(0, 4);
+          }
+          const searchTerm = `${card.cardName} ${card.setName} ${card.cardNumber} ${condition}${year}`;
+          try {
+            const fixedRes = await fetch(
+              `https://tcgbackend-951874125609.us-east4.run.app/api/search?q=${encodeURIComponent(searchTerm)}&filter=${encodeURIComponent("buyingOptions:{FIXED_PRICE}")}`
+            );
+            const fixedData = await fixedRes.json();
+            let prices: number[] = (fixedData.itemSummaries || [])
+              .slice(0, 7)
+              .map((item: any) => Number(item.price?.value))
+              .filter((n: number) => !isNaN(n));
+            let avg = 0;
+            if (prices.length > 0) {
+              avg = prices.reduce((a, b) => a + b, 0) / prices.length;
+            }
+            if (prices.length > 3 && avg >= 10) {
+              prices = prices.filter((price, idx, arr) => {
+                const others = arr.slice(0, idx).concat(arr.slice(idx + 1));
+                const mean = others.reduce((a, b) => a + b, 0) / others.length;
+                return price >= mean * 0.5;
+              });
+              if (prices.length > 0) {
+                avg = prices.reduce((a, b) => a + b, 0) / prices.length;
+              }
+            }
+            if (prices.length > 0) {
+              newEstimates[card.id] = Math.round(avg * 0.85 * 100) / 100;
+            }
+          } catch (e) {
+            // Handle error or skip
+          }
+        }
+        setEstimates(newEstimates);
+        // Update localStorage
+        localStorage.setItem("mycards_estimates", JSON.stringify(newEstimates));
+        const total = Object.values(newEstimates).reduce((sum, val) => sum + val, 0);
+        setCachedTotal(total);
+        localStorage.setItem("mycards_total", total.toString());
+      };
+      fetchMissingEstimates();
+    }
+  }
+}, [cards, estimates, loading, recalcCooldown]);
+
   const deleteCard = async (cardId: string): Promise<void> => {
     const confirmDelete = window.confirm("Are you sure you want to remove this card?");
     if (!confirmDelete) return;
