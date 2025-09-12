@@ -148,7 +148,7 @@ export default function SearchCards() {
 
       // Fetch SOLD items
       const soldRes = await fetch(
-        `http://localhost:8080/api/sold?term=${encodedQuery}`
+        `https://tcgbackend-951874125609.us-east4.run.app/api/sold?term=${encodedQuery}`
       );
       const soldData = await soldRes.json();
       if (Array.isArray(soldData)) {
@@ -159,7 +159,7 @@ export default function SearchCards() {
 
       // Fetch AUCTION items
       const auctionRes = await fetch(
-        `http://localhost:8080/api/search?q=${encodedQuery}&filter=${encodeURIComponent(
+        `https://tcgbackend-951874125609.us-east4.run.app/api/search?q=${encodedQuery}&filter=${encodeURIComponent(
           "buyingOptions:{AUCTION}"
         )}`
       );
@@ -167,7 +167,7 @@ export default function SearchCards() {
 
       // Fetch FIXED_PRICE items
       const fixedRes = await fetch(
-        `http://localhost:8080/api/search?q=${encodedQuery}&filter=${encodeURIComponent(
+        `https://tcgbackend-951874125609.us-east4.run.app/api/search?q=${encodedQuery}&filter=${encodeURIComponent(
           "buyingOptions:{FIXED_PRICE}"
         )}`
       );
@@ -301,7 +301,7 @@ export default function SearchCards() {
         image: selectedCard.image,
         condition: ebayFilters[0] || '',
       };
-      const res = await fetch('http://localhost:8080/api/cards/add', {
+      const res = await fetch('https://tcgbackend-951874125609.us-east4.run.app/api/cards/add', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
