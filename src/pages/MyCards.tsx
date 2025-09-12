@@ -140,8 +140,8 @@ useEffect(() => {
   }, []);
 
   // Fetch estimated price for each card
+  // On initial mount, load from localStorage if available
   useEffect(() => {
-    // Try to load from localStorage first
     const cachedEstimates = localStorage.getItem("mycards_estimates");
     const cachedTime = localStorage.getItem("mycards_lastRecalcTime");
     const cachedTotalStr = localStorage.getItem("mycards_total");
@@ -153,11 +153,24 @@ useEffect(() => {
         return;
       } catch {}
     }
-    // If not cached, fetch
     if (cards.length > 0) fetchEstimates();
+  }, []);
+
+  // Recalculate prices whenever cards array changes (after initial load)
+  useEffect(() => {
+    if (cards.length > 0) fetchEstimates();
+    if (cards.length === 0) {
+      setEstimates({});
+      setCachedTotal(0);
+      setLastRecalcTime(null);
+      localStorage.removeItem("mycards_estimates");
+      localStorage.removeItem("mycards_lastRecalcTime");
+      localStorage.removeItem("mycards_total");
+    }
   }, [cards]);
 
-  useEffect(() => {
+
+    useEffect(() => {
   // Only run if not already calculating and not in cooldown
   if (!loading && !recalcCooldown && cards.length > 0) {
     const missing = cards.filter(card => estimates[card.id] === undefined);
@@ -223,7 +236,24 @@ useEffect(() => {
 
     try {
       await deleteDoc(doc(db, "collections", cardId));
-      setCards((prev) => prev.filter((card) => card.id !== cardId));
+      setCards((prev) => {
+        const updated = prev.filter((card) => card.id !== cardId);
+        // After updating cards, recalculate estimates
+        setTimeout(() => {
+          if (updated.length > 0) {
+            fetchEstimates();
+          } else {
+            // If no cards left, clear estimates and localStorage
+            setEstimates({});
+            setCachedTotal(0);
+            setLastRecalcTime(null);
+            localStorage.removeItem("mycards_estimates");
+            localStorage.removeItem("mycards_lastRecalcTime");
+            localStorage.removeItem("mycards_total");
+          }
+        }, 0);
+        return updated;
+      });
     } catch (error: unknown) {
       if (error instanceof Error) {
         alert("Error deleting card: " + error.message);

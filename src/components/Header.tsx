@@ -40,9 +40,6 @@ export default function Header(): JSX.Element {
         <NavLink to="/" className={({ isActive }) => (isActive ? "active" : "")}>
           Lookup
         </NavLink>
-        <NavLink to="/cards" className={({ isActive }) => (isActive ? "active" : "")}>
-          Pokemon
-        </NavLink>
         <NavLink to="/mycards" className={({ isActive }) => (isActive ? "active" : "")}>
           My Cards
         </NavLink>

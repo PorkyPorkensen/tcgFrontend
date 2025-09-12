@@ -65,6 +65,12 @@ export default function SearchCards() {
     const saved = localStorage.getItem("selectedCard");
     return saved ? JSON.parse(saved) : null;
   });
+  // Persist selected condition
+  const [selectedCondition, setSelectedCondition] = useState<string>(() => {
+    return localStorage.getItem("selectedCondition") || "";
+  });
+  // Track cards in collection (ids)
+  const [collectionIds, setCollectionIds] = useState<string[]>([]);
   const [ebayFilters, setEbayFilters] = useState<string[]>([]);
   const [auctionResults, setAuctionResults] = useState<AuctionCardResult[]>([]);
   const [fixedPriceResults, setFixedPriceResults] = useState<FixedPriceCardResult[]>([]);
@@ -76,6 +82,12 @@ export default function SearchCards() {
   const [soldResults, setSoldResults] = useState<SoldCardResult[]>([]);
   const EPN_CAMPAIGN_ID = "5339116843";
   const [showConditionModal, setShowConditionModal] = useState(false);
+  const [addLoading, setAddLoading] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
+  const [addSuccess, setAddSuccess] = useState<string | null>(null);
+
+  // Utility: Remove special characters from card names for search
+  const sanitizeCardName = (name: string) => name.replace(/[^\w\s\-#]/g, '').replace(/\s+/g, ' ').trim();
 
   // Step 1: Search Pokémon TCG API
   const searchTcgCards = async (searchTerm: string, card?: any) => {
@@ -89,6 +101,8 @@ export default function SearchCards() {
       const year = card.episode.released_at.slice(0, 4);
       if (year) queryWithYear += ` ${year}`;
     }
+    // Sanitize query for search
+    queryWithYear = sanitizeCardName(queryWithYear);
     const encodedQuery = encodeURIComponent(queryWithYear);
     const url = `https://pokemon-tcg-api.p.rapidapi.com/cards/search?search=${encodedQuery}&sort=price_highest`;
     const options = {
@@ -120,7 +134,9 @@ export default function SearchCards() {
     if (card.episode?.released_at) {
       year = " " + card.episode.released_at.slice(0, 4);
     }
-    const searchTerm = `${card.name} ${setName}${cardNumber}${filterString}${year}`;
+    // Sanitize card name for search
+    const cleanName = sanitizeCardName(card.name || '');
+    const searchTerm = `${cleanName} ${setName}${cardNumber}${filterString}${year}`;
     fetchCards(searchTerm.trim());
   };
 
@@ -132,7 +148,7 @@ export default function SearchCards() {
 
       // Fetch SOLD items
       const soldRes = await fetch(
-        `https://tcgbackend-951874125609.us-east4.run.app/api/sold?term=${encodedQuery}`
+        `http://localhost:8080/api/sold?term=${encodedQuery}`
       );
       const soldData = await soldRes.json();
       if (Array.isArray(soldData)) {
@@ -143,7 +159,7 @@ export default function SearchCards() {
 
       // Fetch AUCTION items
       const auctionRes = await fetch(
-        `https://tcgbackend-951874125609.us-east4.run.app/api/search?q=${encodedQuery}&filter=${encodeURIComponent(
+        `http://localhost:8080/api/search?q=${encodedQuery}&filter=${encodeURIComponent(
           "buyingOptions:{AUCTION}"
         )}`
       );
@@ -151,7 +167,7 @@ export default function SearchCards() {
 
       // Fetch FIXED_PRICE items
       const fixedRes = await fetch(
-        `https://tcgbackend-951874125609.us-east4.run.app/api/search?q=${encodedQuery}&filter=${encodeURIComponent(
+        `http://localhost:8080/api/search?q=${encodedQuery}&filter=${encodeURIComponent(
           "buyingOptions:{FIXED_PRICE}"
         )}`
       );
@@ -249,6 +265,66 @@ export default function SearchCards() {
     settcgBookmarks(updated);
   };
 
+  // Add to Collection handler
+  const handleAddToCollection = async () => {
+    if (!selectedCard) return;
+    setAddLoading(true);
+    setAddError(null);
+    setAddSuccess(null);
+    try {
+      // Get user info from Firebase Auth (if available)
+      let userId: string | null = null;
+      try {
+        // @ts-ignore
+        const firebase = await import('../firebase');
+        // @ts-ignore
+        const { getAuth } = await import('firebase/auth');
+        // Try to get the default app
+        const auth = getAuth();
+        userId = auth.currentUser?.uid || null;
+      } catch (e) {
+        // Firebase not available, fallback to localStorage or error
+        const localId = localStorage.getItem('userId');
+        userId = localId ? localId : null;
+      }
+      if (!userId) {
+        setAddError('You must be logged in to add cards to your collection.');
+        setAddLoading(false);
+        return;
+      }
+      // Prepare card data in the structure expected by backend
+      const cardToAdd = {
+        id: selectedCard.id,
+        name: selectedCard.name,
+        set: { name: selectedCard.episode?.name || '' }, // <-- this is what backend expects
+        card_number: selectedCard.card_number,
+        image: selectedCard.image,
+        condition: ebayFilters[0] || '',
+      };
+      const res = await fetch('http://localhost:8080/api/cards/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': userId,
+        },
+        body: JSON.stringify({
+          userId,
+          card: cardToAdd,
+        }),
+      });
+      if (!res.ok) {
+        throw new Error('Failed to add card.');
+      }
+      setAddSuccess('Card added to your collection!');
+      setTimeout(() => setAddSuccess(null), 2500);
+      setCollectionIds((prev) => [...prev, selectedCard.id?.toString()]);
+      localStorage.setItem('selectedCondition', selectedCondition || ebayFilters[0] || '');
+    } catch (err: any) {
+      setAddError(err.message || 'Failed to add card.');
+    }
+    setAddLoading(false);
+  };
+
   return (
     <div className="container">
       <div className="inputDiv">
@@ -287,7 +363,7 @@ export default function SearchCards() {
         error === "Pokemon not found, ensure proper spelling and try again" ? (
           <div className="howToUse" style={{ marginTop: '2em', color: '#ffcc00', fontWeight: 600, fontSize: '1.2em', textDecoration: 'underline' }}>{error}</div>
         ) : (
-          <p style={{textAlign: "center", margin: '2em 0'}}>{error}</p>
+          <p>{error}</p>
         )
       )}
 
@@ -369,56 +445,59 @@ export default function SearchCards() {
 
       {/* Step 2: Show eBay filter options and search button */}
       {showConditionModal && selectedCard && (
-  <div className="modal-overlay" onClick={() => setShowConditionModal(false)}>
-    <div
-      className="modal-content"
-      onClick={e => e.stopPropagation()}
-      style={{
-        animation: "fadeInUp 0.3s",
-        background: "#23243a",
-        padding: "1em",
-        borderRadius: "10px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-        width: "300px",
-        margin: "2em auto"
-      }}
-    >
-      <h2 style={{ textAlign: "center", color: "#ffcc00", marginBottom: "1em", textShadow: "1px 1px 2px #000" }}>Select Condition:</h2>
-      <div style={{ textAlign: 'center', marginBottom: '1em' }}>
-        <select
-          value={ebayFilters[0] || ""}
-          onChange={e => {
-            const val = e.target.value;
-            setEbayFilters(val ? [val] : []);
-          }}
-          style={{ padding: '0.5em', borderRadius: 6, border: '1px solid #ccc', minWidth: 120 }}
-        >
-          <option value="">Select Condition</option>
-          {filterOptions.map(opt => (
-            <option key={opt} value={opt}>{opt}</option>
-          ))}
-        </select>
-      </div>
-      <button
-        style={{
-          display: 'flex',
-          margin: '1em auto',
-          padding: "0.5rem 1rem",
-          backgroundColor: "#ffcc00",
-          color: "black",
-          border: "1px solid transparent",
-          borderRadius: '10px'
-        }}
-        onClick={() => {
-          fetchCardsWithFilters(selectedCard, ebayFilters);
-          setShowConditionModal(false);
-        }}
-      >
-        Confirm
-      </button>
-    </div>
-  </div>
-)}
+        <div className="modal-overlay" onClick={() => setShowConditionModal(false)}>
+          <div
+            className="modal-content"
+            onClick={e => e.stopPropagation()}
+            style={{
+              animation: "fadeInUp 0.3s",
+              background: "#23243a",
+              padding: "1em",
+              borderRadius: "10px",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+              width: "300px",
+              margin: "2em auto"
+            }}
+          >
+            <h2 style={{ textAlign: "center", color: "#ffcc00", marginBottom: "1em", textShadow: "1px 1px 2px #000" }}>Select Condition:</h2>
+            <div style={{ textAlign: 'center', marginBottom: '1em' }}>
+              <select
+                value={ebayFilters[0] || selectedCondition || ""}
+                onChange={e => {
+                  const val = e.target.value;
+                  setEbayFilters(val ? [val] : []);
+                  setSelectedCondition(val);
+                  localStorage.setItem("selectedCondition", val);
+                }}
+                style={{ padding: '0.5em', borderRadius: 6, border: '1px solid #ccc', minWidth: 120 }}
+              >
+                <option value="">Select Condition</option>
+                {filterOptions.map(opt => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+            </div>
+            <button
+              style={{
+                display: 'flex',
+                margin: '0.5em auto 0 auto',
+                padding: "0.3rem 0.8rem",
+                backgroundColor: "#2a2e45",
+                color: "#fff",
+                border: "1px solid #444",
+                borderRadius: '8px',
+                fontSize: '0.95em'
+              }}
+              onClick={() => {
+                fetchCardsWithFilters(selectedCard, ebayFilters);
+                setShowConditionModal(false);
+              }}
+            >
+              View Listings
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Step 3: Show results */}
   {hasSearched && (
@@ -435,8 +514,8 @@ export default function SearchCards() {
               borderRadius: "10px",
               boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
               width: '360px',
-              height: '170px'
-
+              minHeight: '170px',
+              position: 'relative'
             }}>
               <img src={selectedCard.image} alt={selectedCard.name} width={100} style={{ borderRadius: 8, background: "#fff" }} />
               <div>
@@ -448,6 +527,45 @@ export default function SearchCards() {
                   <div style={{ fontSize: "0.95em", color: "#b3b3b3" }}>{selectedCard.episode.name}</div>
                 )}
                 <div style={{ fontSize: "0.95em", color: "#b3b3b3" }}>RAW NM Price: ${selectedCard.prices.cardmarket.lowest_near_mint}</div>
+                {/* Add to Collection button appears here if a condition is selected */}
+                {(selectedCondition || ebayFilters[0]) && (
+                  collectionIds.includes(selectedCard.id?.toString()) ? (
+                    <button
+                      style={{
+                        marginTop: '1em',
+                        padding: "0.5rem 1rem",
+                        backgroundColor: "#b3ffb3",
+                        color: "#222",
+                        border: "1px solid #00b300",
+                        borderRadius: '10px',
+                        fontWeight: 700,
+                        opacity: 1,
+                        cursor: 'default'
+                      }}
+                      disabled
+                    >
+                      In your collection
+                    </button>
+                  ) : (
+                    <button
+                      style={{
+                        marginTop: '1em',
+                        padding: "0.5rem 1rem",
+                        backgroundColor: "#ffcc00",
+                        color: "black",
+                        border: "1px solid transparent",
+                        borderRadius: '10px',
+                        opacity: addLoading ? 0.7 : 1
+                      }}
+                      disabled={addLoading}
+                      onClick={handleAddToCollection}
+                    >
+                      {addLoading ? 'Adding...' : 'Add to Collection'}
+                    </button>
+                  )
+                )}
+                {addError && <div style={{ color: 'red', marginTop: '0.5em', textAlign: 'center' }}>{addError}</div>}
+                {addSuccess && <div style={{ color: 'limegreen', marginTop: '0.5em', textAlign: 'center' }}>{addSuccess}</div>}
               </div>
             </div>
           )}
@@ -534,7 +652,7 @@ export default function SearchCards() {
                   </a>
                 </div>
               ))}
-              {auctionResults.length === 0 && <p style={{textAlign: "center"}}>No auction results found.</p>}
+              {auctionResults.length === 0 && <p style={{ textAlign: 'center', display: 'flex', margin: '0 auto' }}>No auction results found.</p>}
             </div>
           </div>
 
@@ -572,7 +690,7 @@ export default function SearchCards() {
                   </a>
                 </div>
               ))}
-              {fixedPriceResults.length === 0 && <p style={{textAlign: "center"}}>No fixed price results found.</p>}
+              {fixedPriceResults.length === 0 && <p style={{ textAlign: 'center', display: 'flex', margin: '0 auto' }}>No fixed price results found.</p>}
             </div>
           </div>
         </>
