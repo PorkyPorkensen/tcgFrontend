@@ -703,29 +703,19 @@ export default function SearchCards() {
             <h2>MTG COMING SOON!!</h2>
           </div>
           <div className="howToUse">
-            <h3>View Listings</h3>
-            <p>
-              On this page, enter a Pokémon card name in the search bar and click search.
-              You may bookmark a search by clicking the button beside search
-            </p>
-            <h3>Add Cards to your Collection</h3>
-            <p>
-              Head to the{" "}
-              <a style={{ textDecoration: "underline" }} href="/cards">
-                Pokemon
-              </a>{" "}
-              tab to view all cards for a specific Pokémon. You can select a condition
-              for each card and add it to your collection.
-            </p>
-            <h3>View Your Cards</h3>
-            <p>
-              Go to the{" "}
-              <a style={{ textDecoration: "underline" }} href="/mycards">
-                My Cards
-              </a>{" "}
-              tab to see all the cards you've added, their conditions, average sold
-              prices, and a rough Estimated value of your collection.
-            </p>
+            <h3>How to Use</h3>
+            <ol style={{ textAlign: 'left', margin: '0 auto', maxWidth: 500 }}>
+              <li>Enter a Pokémon card name in the search bar and click <b>Search</b>. You can bookmark searches for quick access.</li>
+              <li>Select the card you want from the search results.</li>
+              <li>Choose the card's <b>condition</b> in the popup.</li>
+              <li>After selecting a condition, you can:
+                <ul>
+                  <li>View eBay listings for that card/condition</li>
+                  <li>Or click <b>Add to Collection</b> to save it to your collection</li>
+                </ul>
+              </li>
+              <li>To view your collection, go to the <a style={{ textDecoration: "underline" }} href="/mycards">My Cards</a> tab. There you can see all cards you've added, their conditions, get rough prices, and your collection's estimated value.</li>
+            </ol>
           </div>
           <div className="howToUse">
             <p style={{ fontSize: "0.7em", marginTop: "3em" }}>
