@@ -491,9 +491,10 @@ export default function SearchCards() {
               onClick={() => {
                 fetchCardsWithFilters(selectedCard, ebayFilters);
                 setShowConditionModal(false);
+                setQuery("");
               }}
             >
-              View Listings
+              Confirm
             </button>
           </div>
         </div>
