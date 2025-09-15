@@ -297,7 +297,7 @@ useEffect(() => {
       <h1 style={{ fontSize: "3em", textAlign: "center" }}>My Collection</h1>
 {cards.length > 0 && (
   <>
-    <h2 style={{ textAlign: "center", color: "#ffcc00", marginBottom: "1em", textShadow: "1px 1px 2px #000" }}>
+    <h2 style={{ textAlign: "center", color: "#ffcc00", marginBottom: "1em", textShadow: "1px 1px 2px #000", width: '80%' }}>
       Estimated Collection Value: ${totalEstimate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
     </h2>
     <button
