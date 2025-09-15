@@ -356,7 +356,7 @@ useEffect(() => {
         
       )}
       <BackToTop />
-      <p style={{maxWidth: '350px', fontSize: '0.9em', margin: '3em 0'}}>NOTE: Estimated values are based on market trends and may not reflect actual sale prices.</p>
+      <p style={{maxWidth: '350px', fontSize: '0.9em', margin: '3em 0 4em 0'}}>NOTE: Estimated values are based on market trends and may not reflect actual sale prices.</p>
     </div>
   );
 }
