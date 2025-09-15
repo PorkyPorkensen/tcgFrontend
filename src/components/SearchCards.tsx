@@ -60,6 +60,10 @@ const filterOptions = [
 
 export default function SearchCards() {
   const [query, setQuery] = useState<string>("");
+  // Always clear the search input on mount
+  useEffect(() => {
+    setQuery("");
+  }, []);
   const [tcgResults, setTcgResults] = useState<any[]>([]);
   const [selectedCard, setSelectedCard] = useState<any>(() => {
     const saved = localStorage.getItem("selectedCard");
@@ -137,7 +141,8 @@ export default function SearchCards() {
     // Sanitize card name for search
     const cleanName = sanitizeCardName(card.name || '');
     const searchTerm = `${cleanName} ${setName}${cardNumber}${filterString}${year}`;
-    fetchCards(searchTerm.trim());
+    await fetchCards(searchTerm.trim());
+    setQuery("");
   };
 
   // eBay fetch logic (existing)
@@ -216,13 +221,12 @@ export default function SearchCards() {
   };
 
   useEffect(() => {
-    const savedQuery = localStorage.getItem("lastQuery");
     const savedSold = localStorage.getItem("lastSoldResults");
     const savedAuction = localStorage.getItem("lastAuctionResults");
     const savedFixed = localStorage.getItem("lastFixedPriceResults");
 
-    if (savedQuery && savedSold && savedAuction && savedFixed) {
-      setQuery(decodeURIComponent(savedQuery));
+    // Do NOT restore query from localStorage
+    if (savedSold && savedAuction && savedFixed) {
       try {
         const parsedSold = JSON.parse(savedSold);
         setSoldResults(Array.isArray(parsedSold) ? parsedSold : []);
@@ -233,6 +237,7 @@ export default function SearchCards() {
       setFixedPriceResults(JSON.parse(savedFixed));
       setHasSearched(true);
     }
+    setQuery(""); // Always clear input on mount
   }, []);
 
   useEffect(() => {
@@ -427,6 +432,7 @@ export default function SearchCards() {
       setSelectedCard(card);
       localStorage.setItem("selectedCard", JSON.stringify(card));
       setShowConditionModal(true);
+      setQuery(""); // Clear input when card is selected
         console.log('Selected card:', card);
       }}
       className="cardItem"
@@ -491,10 +497,9 @@ export default function SearchCards() {
               onClick={() => {
                 fetchCardsWithFilters(selectedCard, ebayFilters);
                 setShowConditionModal(false);
-                setQuery("");
               }}
             >
-              Confirm
+              View Listings
             </button>
           </div>
         </div>
@@ -566,7 +571,7 @@ export default function SearchCards() {
                   )
                 )}
                 {addError && <div style={{ color: 'red', marginTop: '0.5em', textAlign: 'center' }}>{addError}</div>}
-                {addSuccess && <div style={{ color: 'limegreen', marginTop: '0.5em', textAlign: 'center' }}>{addSuccess}</div>}
+                {addSuccess && <div style={{ color: 'limegreen', marginTop: '0.5em', textAlign: 'center', marginRight: '1.5em' }}>{addSuccess}</div>}
               </div>
             </div>
           )}
@@ -629,7 +634,7 @@ export default function SearchCards() {
             </h2>
             <div
               className="horizontalScroll"
-              style={auctionResults.length === 1 ? { justifyContent: 'center', display: 'flex' } : {}}
+              style={auctionResults.length <= 5 ? { justifyContent: 'center', display: 'flex' } : {}}
             >
               {auctionResults.map((item) => (
                 <div key={item.itemId} className="cardItem">
@@ -670,7 +675,7 @@ export default function SearchCards() {
             </h2>
             <div
               className="horizontalScroll"
-              style={fixedPriceResults.length === 1 ? { justifyContent: 'center', display: 'flex' } : {marginBottom: '2em'}}
+              style={fixedPriceResults.length <= 5 ? { justifyContent: 'center', display: 'flex' } : {marginBottom: '2em'}}
             >
               {fixedPriceResults.map((item) => (
                 <div key={item.itemId} className="cardItem">
